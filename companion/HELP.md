@@ -2,7 +2,21 @@
 
 ## Overview
 
-This module routes WING sources to Waves SuperRack racks using predefined MIDI sequences. By default it exposes variables for use with a Generic-MIDI instance. Optionally it can open **native MIDI ports** so DAWs and Waves SuperRack can talk to this module directly.
+This module links mixer channels to Waves SuperRack rack selection. The default **MIDI** path exposes variables for Generic-MIDI and optionally opens native MIDI ports. **ProLink** is an additional experimental transport; live SuperRack interoperability has not been confirmed.
+
+## ProLink setup and limits
+
+Select **Control transport → ProLink**, choose a network interface with exactly one link-local IPv6 address, and allow UDP 40123 multicast `ff12::7776` plus incoming TCP to the module's dynamic port. In SuperRack's **Setup → Controller → Pro Link Console Remote**, assign the advertised device (default name `Mixing Station`, matching the archived protocol identity). This module is an independent implementation. No fixed remote TCP port is needed.
+
+Reuse **Route Rack**, **Trigger Channel** and existing mappings. Rack 1 maps to protocol ID 0. The mapping UI changes selection associations, not audio connections. ProLink sends no MIDI fallback. Existing configurations default to MIDI without recreating actions or mappings.
+
+**MIDI OR ProLink:** only the selected service runs. Selecting ProLink closes all native MIDI ports (including input) and stops the Windows MIDI helper, even when its enable setting was previously saved. Switching back stops ProLink before MIDI starts. A helper that cannot be stopped blocks the switch and reports an error. Settings for the inactive transport are hidden but preserved.
+
+Hot Snapshot/Hot Plugin remain MIDI-only. The separate ProLink Recall/Highlight actions take a raw snapshot provider ID unchanged and each requires its own off-by-default configuration gate. No recall or other action runs automatically on connection/reconnection. Disconnected commands are discarded.
+
+`prolink_state`, `prolink_error`, `control_last_error` and `prolink_connected` expose transport status. TCP connected and last-rack history do not confirm remote execution. ProLink uses `prolink_last_send_timestamp`; it does not pulse the legacy `last_action_timestamp` Generic-MIDI trigger or alter MIDI output variables. Check any custom triggers on other shared variables before switching modes.
+
+Before production use, verify discovery/assignment, actual rack 1/8/64 selection, unchanged snapshot IDs with each gate, no MIDI double-send, and reconnect without replay on a disposable show. Full setup, evidence limits and the manual acceptance checklist are in the repository's `docs/PROLINK.md`. The following MIDI setup remains applicable when MIDI is selected.
 
 ---
 
