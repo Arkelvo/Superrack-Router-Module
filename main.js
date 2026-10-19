@@ -146,7 +146,7 @@ class ModuleInstance extends InstanceBase {
 				default: 'midi',
 				choices: [
 					{ id: 'midi', label: 'MIDI (legacy)' },
-					{ id: 'prolink', label: 'ProLink (experimental, live validation required)' },
+					{ id: 'prolink', label: 'ProLink (experimental)' },
 				],
 			},
 			{
