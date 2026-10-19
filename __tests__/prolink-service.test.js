@@ -57,7 +57,7 @@ test('discovery advertises ephemeral port; one peer, hello timer, heartbeat and 
 	await service.start({ interfaceName: 'Ethernet', name: 'Mixing Station' })
 	expect(service.state).toBe('waiting')
 	expect(n.servers[0].listen).toHaveBeenCalledWith({ port: 0, host: '::', ipv6Only: true })
-	expect(n.udpSockets[0].addMembership).toHaveBeenCalledWith('ff12::7776', '::%7')
+	expect(n.udpSockets[0].addMembership).toHaveBeenCalledWith('ff12::7776', '::%Ethernet')
 	n.udpSockets[0].emit('message', Buffer.from('query'), { address: 'fe80::456%7', port: 12345 })
 	const [reply, port, address] = n.udpSockets[0].send.mock.calls[0]
 	expect(reply.readUInt16BE(38)).toBe(54321)
