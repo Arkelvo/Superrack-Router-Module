@@ -33,9 +33,10 @@ jobs:
         id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload Companion package (.tgz, no ZIP wrapper)
+        uses: actions/upload-artifact@v7
         with:
-          name: waves-superrack-router-${{ steps.version.outputs.version }}
-          path: waves-superrack-router-*.tgz
+          # Direct upload requires exactly one file and uses its filename as the artifact name.
+          path: waves-superrack-router-${{ steps.version.outputs.version }}.tgz
+          archive: false
           if-no-files-found: error
