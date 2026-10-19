@@ -18,6 +18,7 @@ coverage/
 .graphify/*
 !.graphify/graph.json
 !.graphify/GRAPH_REPORT.md
+knowledge-graph/*
 # stray nested caches created by the graphify git hook
 */**/.graphify/
 

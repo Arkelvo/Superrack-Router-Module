@@ -6,6 +6,8 @@ const UpdateVariableDefinitions = require('./variables')
 const defaults = require('./default-variables')
 const { startHttpServer, stopHttpServer } = require('./ui/http')
 const { applyMidiStepToVariables } = require('./lib/midi-map')
+const { ProLinkService } = require('./lib/prolink-service')
+const os = require('os')
 const {
 	startMidiService,
 	stopMidiService,
@@ -40,6 +42,11 @@ class ModuleInstance extends InstanceBase {
 		this.logLevel = defaults.logLevel ?? 'error'
 		this._http = defaults.httpSettings
 		this._midi = { started: false, restarting: false, backend: 'none', input: null, output: null, lastSent: [] }
+		this._controlGeneration = 0
+		this._prolinkReady = false
+		this._transportOperations = Promise.resolve()
+		this._transportRevision = 0
+		this._prolink = new ProLinkService((state, error) => this._prolinkStateChanged(state, error))
 	}
 
 	// Companion lifecycle method: Called when the module is initialized
@@ -55,17 +62,20 @@ class ModuleInstance extends InstanceBase {
 		this.updateVariableDefinitions()
 		this.updateStatus(InstanceStatus.Ok)
 		await startHttpServer(this)
-		try {
-			await startMidiService(this)
-		} catch (e) {
-			this._log('error', 'MIDI service failed to start, continuing in variables-only mode', { error: e?.message })
-		}
+		await this._configureTransport()
 	}
 
 	// Companion lifecycle method: Called when the module is destroyed
 	async destroy() {
 		this._log('debug', 'destroy start')
 		this.state.sequenceRunning = false
+		this._destroyed = true
+		this._controlGeneration++
+		this._prolinkReady = false
+		this._transportRevision++
+		this._transportSwitching = true
+		await this._transportOperations
+		await this._prolink.stop()
 		await stopMidiService(this)
 		await stopHttpServer(this)
 		this._log('debug', 'destroy done')
@@ -75,6 +85,7 @@ class ModuleInstance extends InstanceBase {
 	async configUpdated(config) {
 		this.config = config
 		this._applyConfigToLocalScopes(true)
+		await this._configureTransport()
 		try {
 			this.updateActions()
 		} catch {}
@@ -89,23 +100,6 @@ class ModuleInstance extends InstanceBase {
 			hasRackMap: !!this.rackMap,
 			racksLength: this.config?.racks?.length,
 		})
-		// Restart MIDI service only when MIDI-relevant config changed
-		const newMidiSnapshot = midiConfigSnapshot(this.config)
-		if (newMidiSnapshot !== this._midi.configSnapshot) {
-			if (this._midi.restarting) {
-				this._log('debug', 'MIDI restart already in progress')
-			} else {
-				this._midi.restarting = true
-				try {
-					await stopMidiService(this)
-					await startMidiService(this)
-				} catch (err) {
-					this._log('error', 'Failed to restart MIDI service', { error: err?.message })
-				} finally {
-					this._midi.restarting = false
-				}
-			}
-		}
 		const desiredPort = parseInt(this.config?.http?.port, 10)
 		if (Number.isInteger(desiredPort) && desiredPort !== this._http.port) {
 			this._log('info', 'HTTP port change detected', { from: this._http.port, to: desiredPort })
@@ -131,17 +125,66 @@ class ModuleInstance extends InstanceBase {
 	getConfigFields() {
 		this.config = this.config || {}
 
-		return [
+		const fields = [
 			{
 				type: 'static-text',
 				id: 'info_intro',
 				label: 'Info',
 				value:
-					'This module does not open its own MIDI connection. Additionally, create a Generic-MIDI instance and use actions there (CC) with the variables from the help. The built-in  <a href="http://127.0.0.1:' +
+					'Select MIDI (variables and optional native ports) or ProLink for rack selection. The built-in <a href="http://127.0.0.1:' +
 					(this._http?.port ?? '') +
 					'/patch" target="_blank" rel="noopener noreferrer">routepatch</a> UI is served by this module on the configured HTTP port (default ' +
 					(this._http?.port ?? '') +
 					').',
+			},
+			{
+				type: 'dropdown',
+				id: 'controlTransport',
+				label: 'Control transport: MIDI OR ProLink',
+				tooltip:
+					'Only the selected service runs. ProLink stops all native MIDI ports and the MIDI helper, including MIDI input.',
+				default: 'midi',
+				choices: [
+					{ id: 'midi', label: 'MIDI (legacy)' },
+					{ id: 'prolink', label: 'ProLink (experimental, live validation required)' },
+				],
+			},
+			{
+				type: 'dropdown',
+				id: 'prolinkInterface',
+				label: 'ProLink network interface',
+				default: '',
+				choices: [
+					{ id: '', label: 'Select an IPv6 link-local interface' },
+					...Object.entries(os.networkInterfaces()).map(([id, addresses]) => ({
+						id,
+						label: `${id}: ${
+							(addresses || [])
+								.filter((a) => a.family === 'IPv6' || a.family === 6)
+								.map((a) => a.address)
+								.join(', ') || 'no IPv6'
+						}`,
+					})),
+				],
+			},
+			{
+				type: 'textinput',
+				id: 'prolinkName',
+				label: 'ProLink discovery name',
+				default: 'Mixing Station',
+				tooltip: 'Original compatibility identity. Custom names and multiple instances require live testing.',
+			},
+			{
+				type: 'checkbox',
+				id: 'prolinkRecallEnabled',
+				label: 'Allow explicit ProLink snapshot recall actions',
+				default: false,
+			},
+			{
+				type: 'checkbox',
+				id: 'prolinkHighlightEnabled',
+				label: 'Allow explicit ProLink snapshot highlight actions',
+				default: false,
 			},
 			{
 				type: 'dropdown',
@@ -198,7 +241,7 @@ class ModuleInstance extends InstanceBase {
 			{
 				type: 'checkbox',
 				id: 'midiEnabled',
-				label: 'Enable native MIDI ports',
+				label: 'Enable native MIDI ports (MIDI mode only)',
 				default: false,
 			},
 			{
@@ -248,9 +291,17 @@ class ModuleInstance extends InstanceBase {
 					'CC number whose value is interpreted as the mixer channel to route (same semantics as the Trigger Channel action).',
 			},
 		]
+		return fields.map((field) => {
+			if (field.id.startsWith('prolink')) field.isVisible = (config) => config.controlTransport === 'prolink'
+			if (field.id.startsWith('midi') || field.id === 'info_midi')
+				field.isVisible = (config) => (config.controlTransport ?? 'midi') === 'midi'
+			return field
+		})
 	}
 
 	_applyConfigToLocalScopes(preventConfigReupdate = false) {
+		// Invalidate delayed MIDI steps on any configuration change.
+		this._controlGeneration++
 		let changed = false
 
 		const newLogLevel = this.config?.logLevel || 'error'
@@ -335,6 +386,7 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	_sendMidiStep(step) {
+		if (this._destroyed || this._transportSwitching || this._transport() !== 'midi') return
 		// Statt direkt zu senden: Variablen setzen, von Generic-MIDI aus nutzbar
 		const ch = step.channel
 		let controller = ''
@@ -439,10 +491,25 @@ class ModuleInstance extends InstanceBase {
 
 	// --- Routing Actions ---
 	async routeRack(rackId) {
+		if (this._destroyed) return false
+		if (this._transportSwitching) return this._controlFailure('Control transport is switching; command was not queued')
+		if (this._transport() !== 'midi') {
+			if (rackId === 0 || rackId === '0') return false
+			const number = this._prolinkId(rackId, 1, Math.min(this.rackCount, 64))
+			if (number === null) return this._controlFailure('Invalid ProLink rack number')
+			if (!this._sendProlink('ShowRackByID', number - 1)) return false
+			this.state.lastRoutedRacks = [number, ...this.state.lastRoutedRacks.filter((id) => Number(id) !== number)].slice(
+				0,
+				8,
+			)
+			this._updateVariables()
+			this.checkFeedbacks?.('rack_last_used')
+			return true
+		}
 		this.state.sequenceRunning = true
 		this.state.sequenceStartTs = Date.now()
 		try {
-			await this._executeRackSequence(rackId)
+			if ((await this._executeRackSequence(rackId)) === false) return false
 			this.state.lastRoutedRacks = [rackId, ...(this.state.lastRoutedRacks || []).filter((id) => id !== rackId)].slice(
 				0,
 				8,
@@ -454,6 +521,12 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	async routeSnapshot(snapshotId) {
+		if (this._destroyed) return false
+		if (this._transportSwitching) return this._controlFailure('Control transport is switching; command was not queued')
+		if (this._transport() !== 'midi')
+			return this._controlFailure(
+				'Hot Snapshot is a MIDI slot; use the explicit ProLink snapshot action with a provider ID',
+			)
 		this.state.sequenceRunning = true
 		this.state.sequenceStartTs = Date.now()
 		try {
@@ -465,6 +538,10 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	async routePlugin(pluginId) {
+		if (this._destroyed) return false
+		if (this._transportSwitching) return this._controlFailure('Control transport is switching; command was not queued')
+		if (this._transport() !== 'midi')
+			return this._controlFailure('Hot Plugin is not supported by ProLink; no MIDI fallback was sent')
 		this.state.sequenceRunning = true
 		this.state.sequenceStartTs = Date.now()
 		try {
@@ -476,6 +553,7 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	async _executeSequence(steps, logContext) {
+		const generation = this._controlGeneration
 		if (!steps) {
 			this._log('warn', `${logContext.type} not found in hotMap`, logContext)
 			return
@@ -483,6 +561,13 @@ class ModuleInstance extends InstanceBase {
 		this._log('info', `${logContext.type} sequence started`, { ...logContext, steps: steps.length })
 		this.state.sequenceStartTs = Date.now()
 		for (const step of steps) {
+			if (
+				this._destroyed ||
+				this._transportSwitching ||
+				generation !== this._controlGeneration ||
+				this._transport() !== 'midi'
+			)
+				return false
 			if (Date.now() - this.state.sequenceStartTs > this.state.sequenceTimeoutMs) {
 				this._log('error', `timeout during ${logContext.type} sequence`, logContext)
 				this.state.failedStepsTotal++
@@ -502,12 +587,13 @@ class ModuleInstance extends InstanceBase {
 			const totalDelay = (step.delay > 0 ? step.delay : 0) + MIDI_STEP_DELAY_MS
 			if (totalDelay > 0) await new Promise((res) => setTimeout(res, totalDelay))
 		}
+		if (this._destroyed || generation !== this._controlGeneration) return false
 		this._log('info', `ended ${logContext.type} sequence`, logContext)
 	}
 
 	async _executeRackSequence(rackId) {
 		const steps = this.getMidiSequenceForRack(rackId)
-		await this._executeSequence(steps, { type: 'rack', rackId })
+		return this._executeSequence(steps, { type: 'rack', rackId })
 	}
 
 	async _executeSnapshotSequence(snapshotId) {
@@ -534,6 +620,8 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	_buildRackChoices() {
+		if (this._transport() === 'prolink')
+			return Array.from({ length: this.rackCount }, (_, i) => ({ id: String(i + 1), label: `Rack ${i + 1}` }))
 		return this.hotMap.map((entry) => ({
 			id: String(entry.rack),
 			label: `Rack ${entry.rack} (Plugin ${entry.plugin}, Snapshot ${entry.snapshot})`,
@@ -548,6 +636,117 @@ class ModuleInstance extends InstanceBase {
 	_buildHotPluginChoices() {
 		// IDs 1–12
 		return Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1), label: `Hot Plugin ${i + 1}` }))
+	}
+
+	_transport() {
+		return this.config?.controlTransport ?? 'midi'
+	}
+
+	_prolinkId(value, min = 0, max = 2147483647) {
+		if (typeof value !== 'number' && (typeof value !== 'string' || !/^\d+$/.test(value))) return null
+		const id = Number(value)
+		return Number.isInteger(id) && id >= min && id <= max ? id : null
+	}
+
+	_controlFailure(message) {
+		this.state.failedStepsTotal++
+		this._log('warn', message)
+		this.setVariableValues({ control_last_error: message })
+		this._updateVariables()
+		return false
+	}
+
+	_sendProlink(command, id) {
+		if (this._destroyed || this._transport() !== 'prolink' || !this._prolinkReady)
+			return this._controlFailure('ProLink is not ready; command was not queued')
+		try {
+			this._prolink.send(command, id)
+			// Legacy Generic-MIDI triggers watch last_action_timestamp. Keep that pulse MIDI-only.
+			this.setVariableValues({ control_last_error: '', prolink_last_send_timestamp: Date.now() })
+			this._updateVariables()
+			return true
+		} catch (error) {
+			return this._controlFailure(error.message)
+		}
+	}
+
+	async routeProlinkSnapshot(command, value) {
+		const gate =
+			command === 'RecallSnapshot'
+				? 'prolinkRecallEnabled'
+				: command === 'HighlightSnapshot'
+					? 'prolinkHighlightEnabled'
+					: null
+		if (!gate || this.config?.[gate] !== true) return this._controlFailure('This ProLink snapshot action is disabled')
+		const id = this._prolinkId(value)
+		if (id === null) return this._controlFailure('Snapshot provider ID must be an integer from 0 to 2147483647')
+		return this._sendProlink(command, id)
+	}
+
+	async _configureTransport() {
+		if (this._destroyed) return
+		const transport = this._transport()
+		const options = {
+			interfaceName: this.config?.prolinkInterface || '',
+			name: this.config?.prolinkName ?? 'Mixing Station',
+		}
+		const snapshot = JSON.stringify([transport, transport === 'midi' ? midiConfigSnapshot(this.config) : options])
+		if (snapshot === this._transportConfig && this._prolink.state !== 'fault' && !this._transportSwitching) return
+		const revision = ++this._transportRevision
+		this._transportSwitching = true
+		this._prolinkReady = false
+		const operation = this._transportOperations.then(async () => {
+			if (this._destroyed || revision !== this._transportRevision) return
+			try {
+				// Break before make: no new service until both old services have stopped.
+				await this._prolink.stop()
+				await stopMidiService(this)
+				if (this._destroyed || revision !== this._transportRevision) return
+				if (transport === 'prolink') {
+					await this._prolink.start(options)
+				} else if (transport === 'midi') {
+					await startMidiService(this)
+				} else {
+					throw new Error('Unknown control transport')
+				}
+				if (this._destroyed || revision !== this._transportRevision) return
+				this._transportConfig = snapshot
+				this._prolinkReady = transport === 'prolink'
+				this._transportSwitching = false
+				if (transport === 'midi') this.updateStatus(InstanceStatus.Ok)
+			} catch (error) {
+				this._transportConfig = null
+				this._log('error', `Control transport switch failed: ${error.message}`)
+				if (!this._destroyed) this.updateStatus(InstanceStatus.ConnectionFailure, error.message)
+				// Remain blocked: a failed stop must never allow fallback to the other transport.
+			}
+		})
+		this._transportOperations = operation.catch(() => {})
+		await operation
+	}
+
+	_prolinkStateChanged(state, error) {
+		if (this._destroyed) return
+		this.setVariableValues({ prolink_state: state, prolink_error: error || '' })
+		this.checkFeedbacks?.('prolink_connected')
+		if (this._transport() !== 'prolink') return
+		const statuses = {
+			starting: InstanceStatus.Connecting,
+			waiting: InstanceStatus.Connecting,
+			connected: InstanceStatus.Ok,
+			fault: InstanceStatus.ConnectionFailure,
+			stopped: InstanceStatus.Disconnected,
+		}
+		this.updateStatus(
+			statuses[state],
+			error ||
+				(state === 'waiting'
+					? 'Waiting for ProLink assignment in SuperRack'
+					: state === 'connected'
+						? 'ProLink TCP connected; remote execution is not acknowledged'
+						: `ProLink ${state}`),
+		)
+		if (error) this._log('error', error)
 	}
 }
 

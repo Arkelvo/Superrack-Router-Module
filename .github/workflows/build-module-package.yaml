@@ -2,8 +2,6 @@ name: Build module package (test builds, no release)
 
 on:
   workflow_dispatch:
-  push:
-    branches-ignore: ['main']
 
 jobs:
   package:
@@ -15,7 +13,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Enable Corepack (Yarn v4)
         run: corepack enable
@@ -26,16 +24,17 @@ jobs:
       - name: Run tests
         run: yarn test
 
-      - name: Build module package
+      - name: Build package (.tgz)
         run: yarn package
 
       - name: Read version
         id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload Companion package (.tgz, no ZIP wrapper)
+        uses: actions/upload-artifact@v7
         with:
-          name: waves-superrack-router-${{ steps.version.outputs.version }}
-          path: waves-superrack-router-*.tgz
+          # Direct upload requires exactly one file and uses its filename as the artifact name.
+          path: waves-superrack-router-${{ steps.version.outputs.version }}.tgz
+          archive: false
           if-no-files-found: error

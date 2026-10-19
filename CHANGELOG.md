@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0] – 2026-10-19
+
+### Added
+
+- Experimental ProLink control with IPv6 discovery, a local TCP server, rack selection, and separately enabled snapshot recall/highlight actions. Live SuperRack interoperability remains unverified.
+- Explicit MIDI OR ProLink selection, preserving existing MIDI configurations and channel/rack mappings.
+
+### Fixed
+
+- Transport switching stops the previous service before starting the next, including MIDI ports and the Windows helper; failed shutdown blocks switching.
+- Test-build artifacts download directly as Companion-compatible `.tgz` files without an additional ZIP wrapper.
+
 ## [0.6.1] – 2026-07-02
 
 ### Fixed

@@ -4,6 +4,8 @@
 
 This module enables routing of WING sources to Waves SuperRack racks using predefined MIDI sequences. By default it exposes variables that can be triggered via a Generic-MIDI instance. Optionally, it opens **native MIDI ports** ("SuperRack Router In/Out") so MIDI hosts can talk to it directly — virtual ports on macOS/Linux, loopMIDI-based on Windows (see HELP).
 
+An explicit experimental ProLink transport is also available alongside the default MIDI path. Existing configurations remain MIDI-compatible. See [setup, protocol limits and manual SuperRack acceptance](docs/PROLINK.md). Live interoperability with SuperRack has not yet been confirmed.
+
 ---
 
 ## Features
