@@ -22,4 +22,11 @@ module.exports = [
 			updatedFeedbacks: [],
 		}
 	},
+	function (_context, props) {
+		return {
+			updatedConfig: props.config?.controlTransport == null ? { ...props.config, controlTransport: 'midi' } : null,
+			updatedActions: [],
+			updatedFeedbacks: [],
+		}
+	},
 ]

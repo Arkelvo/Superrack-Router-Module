@@ -69,6 +69,7 @@ function createFakeHelperProcess() {
 const midiMock = require('@julusian/midi')
 const {
 	startMidiService,
+	handleIncomingMidi,
 	stopMidiService,
 	sendMidiStep,
 	midiStepToBytes,
@@ -191,6 +192,33 @@ describe('startMidiService (virtual backend)', () => {
 		await startMidiService(instance)
 		expect(midiMock.__state.outputs).toHaveLength(1)
 	})
+
+	test('partial startup retains an output handle if cleanup fails and prevents later switch', async () => {
+		const OriginalInput = midiMock.Input
+		const inputSpy = jest.spyOn(midiMock, 'Input').mockImplementation(() => {
+			const input = new OriginalInput()
+			input.openVirtualPort.mockImplementation(() => {
+				throw new Error('input failed')
+			})
+			const output = midiMock.__state.outputs[0]
+			output.closePort.mockImplementation(() => {
+				throw new Error('busy')
+			})
+			output.destroy.mockImplementation(() => {
+				throw new Error('busy')
+			})
+			return input
+		})
+		try {
+			const instance = createInstance()
+			await expect(startMidiService(instance)).rejects.toThrow(/MIDI port/)
+			expect(instance._midi.output).toBe(midiMock.__state.outputs[0])
+			instance.config.controlTransport = 'prolink'
+			await expect(stopMidiService(instance)).rejects.toThrow(/MIDI port/)
+		} finally {
+			inputSpy.mockRestore()
+		}
+	})
 })
 
 describe('startMidiService (Windows open-by-name backend)', () => {
@@ -309,10 +337,34 @@ describe('startMidiService (Windows MIDI Services helper backend)', () => {
 	test('stopMidiService asks the helper to quit', async () => {
 		const instance = createInstance()
 		const child = await startWithHelper(instance)
-		await stopMidiService(instance)
+		let stopped = false
+		const stopping = stopMidiService(instance).then(() => {
+			stopped = true
+		})
+		await Promise.resolve()
+		expect(stopped).toBe(false)
+		child.emit('exit', 0)
+		await stopping
 		expect(child.stdin.write).toHaveBeenCalledWith(JSON.stringify({ type: 'quit' }) + '\n')
 		expect(instance._midi.started).toBe(false)
 		expect(instance._midi.helper).toBeNull()
+	})
+
+	test('unresponsive helper prevents switch completion even after kill request', async () => {
+		jest.useFakeTimers()
+		try {
+			const instance = createInstance()
+			const child = await startWithHelper(instance)
+			const stopping = stopMidiService(instance)
+			const rejected = expect(stopping).rejects.toThrow(/did not exit/)
+			await jest.advanceTimersByTimeAsync(3000)
+			await rejected
+			expect(child.kill).toHaveBeenCalled()
+			expect(instance._midi.helper).toBe(child)
+			child.emit('exit', 0)
+		} finally {
+			jest.useRealTimers()
+		}
 	})
 })
 
@@ -409,6 +461,33 @@ describe('stopMidiService', () => {
 		const instance = createInstance({ midiEnabled: false })
 		await expect(stopMidiService(instance)).resolves.toBeUndefined()
 	})
+	test('failure to close and destroy a port blocks transport switching', async () => {
+		const instance = createInstance()
+		await startMidiService(instance)
+		const input = midiMock.__state.inputs[0]
+		input.closePort.mockImplementation(() => {
+			throw new Error('busy')
+		})
+		input.destroy.mockImplementation(() => {
+			throw new Error('busy')
+		})
+		await expect(stopMidiService(instance)).rejects.toThrow(/MIDI port/)
+		expect(instance._midi.input).toBe(input)
+	})
+})
+
+test('ProLink disables native MIDI backend and blocks late input/output callbacks', async () => {
+	const instance = createInstance({ controlTransport: 'prolink', midiEnabled: true })
+	expect(resolveBackend(instance.config, 'win32')).toBe('none')
+	await startMidiService(instance)
+	expect(instance._midi.started).toBe(false)
+	instance._midi.started = true
+	instance._midi.output = { sendMessage: jest.fn() }
+	instance.rackMap = [null, { id: 1, value: 5 }]
+	handleIncomingMidi(instance, [0xb0, 1, 5])
+	expect(instance.routeRack).not.toHaveBeenCalled()
+	expect(sendMidiStep(instance, { type: 'cc', channel: 1, controller: 1, value: 5 })).toBe(false)
+	expect(instance._midi.output.sendMessage).not.toHaveBeenCalled()
 })
 
 describe('midiConfigSnapshot', () => {

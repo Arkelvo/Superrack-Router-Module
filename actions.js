@@ -6,6 +6,28 @@ module.exports = function (self) {
 	const hotPluginChoices = self._buildHotPluginChoices ? self._buildHotPluginChoices() : []
 
 	self.setActionDefinitions({
+		...Object.fromEntries(
+			[
+				['prolink_recall_snapshot', 'RecallSnapshot', 'ProLink: Recall snapshot by provider ID'],
+				['prolink_highlight_snapshot', 'HighlightSnapshot', 'ProLink: Highlight snapshot by provider ID'],
+			].map(([key, command, name]) => [
+				key,
+				{
+					name,
+					options: [
+						{
+							id: 'snapshotId',
+							type: 'number',
+							label: 'Snapshot provider ID (unchanged, not a MIDI hot slot)',
+							min: 0,
+							max: 2147483647,
+							default: 0,
+						},
+					],
+					callback: async (event) => self.routeProlinkSnapshot(command, event.options.snapshotId),
+				},
+			]),
+		),
 		route_rack: {
 			name: 'Route Rack',
 			options: [{ id: 'rackId', type: 'dropdown', label: 'Rack', choices: rackChoices, default: rackChoices[0]?.id }],

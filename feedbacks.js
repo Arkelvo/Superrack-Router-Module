@@ -2,6 +2,13 @@ const { combineRgb } = require('@companion-module/base')
 
 module.exports = async function (self) {
 	self.setFeedbackDefinitions({
+		prolink_connected: {
+			name: 'ProLink TCP connected (not execution confirmation)',
+			type: 'boolean',
+			options: [],
+			defaultStyle: { bgcolor: combineRgb(0, 100, 0), color: combineRgb(255, 255, 255) },
+			callback: () => self.config?.controlTransport === 'prolink' && self._prolink?.state === 'connected',
+		},
 		active_source: {
 			name: 'active source',
 			type: 'boolean',
