@@ -47,10 +47,10 @@ Windows build note from this verification: the installed build tool launched Pow
 npx.cmd --no-install webpack -c node_modules/@companion-module/tools/webpack.config.cjs --env "ROOT=$PWD" --env MODULETYPE=connection
 # Continue only if webpack reports successful compilation.
 node --check pkg/main.js
-node -e "require('tar').create({gzip:true,file:'waves-superrack-router-0.6.1.tgz'},['pkg']).catch(e=>{console.error(e);process.exitCode=1})"
+node -e "require('tar').create({gzip:true,file:'waves-superrack-router-0.7.0.tgz'},['pkg']).catch(e=>{console.error(e);process.exitCode=1})"
 ```
 
-The final local verification passed 130 tests in 12 suites, formatting, direct webpack compilation and archive inspection. The package version remains 0.6.1; this is a development build, not a new published release. The dependency install reported 34 audit findings in the existing dependency tree; they were not remediated as part of ProLink.
+The final implementation verification passed 130 tests in 12 suites, formatting, direct webpack compilation and archive inspection. The package version is now 0.7.0; test builds do not create a published release. The dependency install reported 34 audit findings in the existing dependency tree; they were not remediated as part of ProLink.
 
 ## Manual SuperRack acceptance (not yet performed)
 
