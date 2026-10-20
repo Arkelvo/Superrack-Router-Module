@@ -36,6 +36,28 @@ module.exports = function (self) {
 		return self._sendProlink(command, number)
 	}
 
+	// Focus-bound relative control only; no arbitrary rack, slot or parameter ID.
+	// Require live controller properties and a value to avoid blind manipulation.
+	self.changeFocusedProlinkController = function (direction, steps) {
+		const sign = Number(direction)
+		const amount = Number(steps)
+		if (![1, -1].includes(sign) || !Number.isInteger(amount) || amount < 1 || amount > 8) {
+			return self._controlFailure('Controller adjustment requires direction +/-1 and 1..8 whole steps')
+		}
+		const controller = self._prolinkObservations?.controllerState
+		if (!controller?.properties || !controller?.value) {
+			return self._controlFailure('No selected controller properties and value observed; subscribe and select a control first')
+		}
+		const delta = sign * amount
+		const contextVersion = controller.contextVersion
+		const previousSignature = controller.value.signature
+		// _sendProlink performs transport readiness checks and existing ResultCommand tracking.
+		if (self._sendProlink('ChangeControllerValue', delta) !== true) return false
+		// This only watches for a later changed notification, not a confirmed write.
+		self._prolinkObservations.trackControllerWrite({ delta, contextVersion, previousSignature })
+		return true
+	}
+
 	const rackChoices = self._buildRackChoices ? self._buildRackChoices() : []
 	const hotSnapshotChoices = self._buildHotSnapshotChoices ? self._buildHotSnapshotChoices() : []
 	const hotPluginChoices = self._buildHotPluginChoices ? self._buildHotPluginChoices() : []
@@ -117,6 +139,18 @@ module.exports = function (self) {
 			}],
 			callback: async (event) => self.runProlinkExtension(command, event.options.providerId),
 		}])),
+		prolink_controller_relative: {
+			name: 'ProLink: Adjust selected Touch-and-Turn controller (relative)',
+			options: [
+				{
+					id: 'direction', type: 'dropdown', label: 'Signed direction (live semantics to verify)',
+					choices: [{ id: 1, label: 'Positive (+)'  }, { id: -1, label: 'Negative (-)'  }],
+					default: 1,
+				},
+				{ id: 'steps', type: 'number', label: 'Relative delta magnitude (1-8, NOT dB)', min: 1, max: 8, default: 1 },
+			],
+			callback: async (event) => self.changeFocusedProlinkController(event.options.direction, event.options.steps),
+		},
 		prolink_controller_subscription: {
 			name: 'ProLink: Subscribe to focused controller updates',
 			options: [{
