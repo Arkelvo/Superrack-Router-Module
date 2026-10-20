@@ -871,7 +871,7 @@ class ModuleInstance extends InstanceBase {
 			return this._controlFailure('ProLink is not ready; command was not queued')
 		try {
 			const sequence = this._prolink.send(command, id)
-			this._prolinkObservations.track(command, sequence)
+			this._prolinkObservations.track(command, sequence, id)
 			// Legacy Generic-MIDI triggers watch last_action_timestamp. Keep that pulse MIDI-only.
 			this.setVariableValues({ control_last_error: '', prolink_last_send_timestamp: Date.now() })
 			this._updateVariables()

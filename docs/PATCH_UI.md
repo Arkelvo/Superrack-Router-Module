@@ -40,3 +40,9 @@ Die Daten dienen der UI-Präsentation. `observed=true` bedeutet, dass ein nichtl
 ## Grenzen
 
 Die ProLink-Schnittstelle bestätigt nicht zuverlässig das aktuell **sichtbar ausgewählte Rack**, wenn es manuell in SuperRack gewechselt wurde. Daher wird keine fiktive Auswahl-Rückmeldung berechnet. Abfragen `GetRackName` und `GetRacksInfo` sind unabhängig von der bereits nachgewiesenen asynchronen Gesamtkonfiguration und werden weiter in der Rack-Synchronisierungsphase untersucht.
+
+## Racknamen mit dynamischer Spaltenbreite
+
+Alle Beschriftungen der Rack-Zeilen stehen in **einer gemeinsamen Grid-Spalte**. Deren Breite passt sich automatisch an den längsten gerade angezeigten Namen an (`max-content`); ein langer Name wird nicht umgebrochen, abgeschnitten oder durch Auslassungspunkte ersetzt. Die Kanalspalten bleiben jeweils 30 px breit. Falls die Matrix breiter als das Browserfenster wird, kann sie innerhalb der bestehenden Patch-Ansicht horizontal gescrollt werden.
+
+Die Darstellung funktioniert auch bei Live-Umbenennungen, bei einem Wechsel des Transports und beim neutralen Fallback `Rack X`. Die Matrix und ihre Eventhandler werden dabei nicht neu erstellt; Änderungen betreffen nur Text und CSS-Grid-Breite. Diese Anpassung gilt nur für das Rack-/Kanal-Patchfeld und verändert die MIDI-Editoren nicht.

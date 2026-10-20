@@ -9,6 +9,22 @@
 	const isMidiEditor = typeof window !== 'undefined' && /^\/midi\/(plugin|snapshot)$/.test(window.location.pathname)
 	if (!rackMatrix && !midiOnlyLinks.length && !isMidiEditor) return
 
+	// The matrix is rendered by app.js using an inline 100px first column.
+	// Replace only that track; max-content measures the *longest* rack label
+	// and applies one shared width to every row. All channel tracks stay intact.
+	function resizeRackColumn() {
+		if (!rackMatrix || typeof rackMatrix.querySelector !== 'function') return
+		const table = rackMatrix.querySelector('.patch-table')
+		if (!table || !table.style) return
+		const template = table.style.gridTemplateColumns
+		if (typeof template === 'string' && /^100px(?=\s+repeat\()/i.test(template)) {
+			table.style.gridTemplateColumns = template.replace(/^100px/i, 'max-content')
+		}
+	}
+	if (rackMatrix && typeof MutationObserver === 'function') {
+		new MutationObserver(resizeRackColumn).observe(rackMatrix, { childList: true })
+	}
+
 	function render(state) {
 		const prolink = state?.transport === 'prolink'
 		if (isMidiEditor && prolink) {
@@ -30,6 +46,7 @@
 				}
 			}
 		}
+		resizeRackColumn()
 		const labels = rackMatrix.querySelectorAll('.patch-y-label')
 		labels.forEach((label, index) => {
 			const id = index + 1
