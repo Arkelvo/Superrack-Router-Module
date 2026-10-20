@@ -148,6 +148,13 @@ class ModuleInstance extends InstanceBase {
 
 			const { path, args } = message
 
+			// ProLinkObservations already logs controller changes once per distinct value.
+			// Keep decoding these packets; suppress only the repetitive raw debug output.
+			if (
+				path === '/waves.com/remote/NotifyControllerProperties' ||
+				path === '/waves.com/remote/NotifyControllerValue'
+			) return
+
 			// Touch & Turn: Nur bei tatsächlicher Änderung loggen
 			if (path.endsWith('/NotifyTouchAndTurnControlOwnership')) {
 				const value = args[0]
