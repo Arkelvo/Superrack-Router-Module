@@ -9,6 +9,24 @@ module.exports = async function (self) {
 			defaultStyle: { bgcolor: combineRgb(0, 100, 0), color: combineRgb(255, 255, 255) },
 			callback: () => self.config?.controlTransport === 'prolink' && self._prolink?.state === 'connected',
 		},
+		prolink_rack_muted: {
+			name: 'SuperRack rack muted (observed)',
+			type: 'boolean',
+			options: [{ id: 'rackId', type: 'number', label: 'Rack (1–64)', min: 1, max: 64, default: 1 }],
+			defaultStyle: { bgcolor: combineRgb(160, 0, 0), color: combineRgb(255, 255, 255) },
+			callback: (fb) =>
+				self._prolink?.state === 'connected' &&
+				self._prolinkObservations?.racks.get(Number(fb.options.rackId))?.muted === true,
+		},
+		prolink_rack_on: {
+			name: 'SuperRack rack on (observed)',
+			type: 'boolean',
+			options: [{ id: 'rackId', type: 'number', label: 'Rack (1–64)', min: 1, max: 64, default: 1 }],
+			defaultStyle: { bgcolor: combineRgb(0, 100, 0), color: combineRgb(255, 255, 255) },
+			callback: (fb) =>
+				self._prolink?.state === 'connected' &&
+				self._prolinkObservations?.racks.get(Number(fb.options.rackId))?.on === true,
+		},
 		active_source: {
 			name: 'active source',
 			type: 'boolean',

@@ -7,6 +7,7 @@ const defaults = require('./default-variables')
 const { startHttpServer, stopHttpServer } = require('./ui/http')
 const { applyMidiStepToVariables } = require('./lib/midi-map')
 const { ProLinkService } = require('./lib/prolink-service')
+const { ProLinkObservations } = require('./lib/prolink-observations')
 const os = require('os')
 const {
 	startMidiService,
@@ -17,6 +18,79 @@ const {
 } = require('./lib/midi-service')
 
 const MIDI_STEP_DELAY_MS = 50
+
+
+function decodeProlinkOsc(payload) {
+	let offset = 0
+
+	const readString = () => {
+		const end = payload.indexOf(0, offset)
+		if (end < 0) throw new Error('Invalid OSC string')
+
+		const value = payload.toString('utf8', offset, end)
+		offset = (end + 4) & ~3
+
+		if (offset > payload.length) {
+			throw new Error('Invalid OSC padding')
+		}
+		return value
+	}
+
+	const readInt = () => {
+		if (offset + 4 > payload.length) {
+			throw new Error('Truncated OSC integer')
+		}
+		const value = payload.readInt32BE(offset)
+		offset += 4
+		return value
+	}
+
+	const path = readString()
+	const tags = readString()
+
+	if (!tags.startsWith(',')) {
+		throw new Error('Invalid OSC type tags')
+	}
+
+	let index = 1
+
+	const readValue = () => {
+		const type = tags[index++]
+
+		switch (type) {
+			case 'i': return readInt()
+			case 's': return readString()
+			case 'T': return true
+			case 'F': return false
+			case '[': {
+				const values = []
+				while (
+					index < tags.length &&
+					tags[index] !== ']'
+					) {
+					values.push(readValue())
+				}
+				if (tags[index++] !== ']') {
+					throw new Error('Unclosed OSC array')
+				}
+				return values
+			}
+			default:
+				throw new Error(`Unsupported OSC type: ${type}`)
+		}
+	}
+
+	const args = []
+	while (index < tags.length) {
+		args.push(readValue())
+	}
+
+	if (offset !== payload.length) {
+		throw new Error('Unexpected OSC trailing data')
+	}
+
+	return { path, args }
+}
 
 class ModuleInstance extends InstanceBase {
 	constructor(internal) {
@@ -47,6 +121,130 @@ class ModuleInstance extends InstanceBase {
 		this._transportOperations = Promise.resolve()
 		this._transportRevision = 0
 		this._prolink = new ProLinkService((state, error) => this._prolinkStateChanged(state, error))
+		this._prolinkObservations = new ProLinkObservations(this)
+		// Handle observations independently from the existing onDebugFrame logger.
+		// Raw/decoded debug logging below remains intact.
+		this._prolink.onFrame = (frame) => this._prolinkObservations.receive(frame)
+		this._prolink.onFrameError = (error) =>
+			this._log('warn', '[PROLINK_FRAME_ERROR]', { error: error.message })
+
+
+		this._prolink.onDebugFrame = (frame) => {
+			if (this.logLevel !== 'debug') return
+			if (frame.type !== 5) return
+
+			let message
+
+			try {
+				message = decodeProlinkOsc(frame.payload)
+			} catch (error) {
+				this._log('debug', '[PROLINK_RX_RAW]', {
+					error: error.message,
+					hex: frame.payload.toString('hex').slice(0, 1024),
+				})
+				return
+			}
+
+			const { path, args } = message
+
+			// Touch & Turn: Nur bei tatsächlicher Änderung loggen
+			if (path.endsWith('/NotifyTouchAndTurnControlOwnership')) {
+				const value = args[0]
+
+				if (this._lastTouchOwnership === value) return
+				this._lastTouchOwnership = value
+
+				this._log('debug', '[PROLINK_TOUCH_OWNERSHIP]', {
+					value,
+				})
+				return
+			}
+
+			// Vollständige Rack-Konfiguration
+			if (path.endsWith('/NotifyRacksConfigChanged')) {
+				const [count, ...rows] = args
+
+				if (
+					count !== rows.length ||
+					!rows.every(r => Array.isArray(r) && r.length === 11)
+				) {
+					this._log('warn', 'Unexpected rack configuration format')
+					return
+				}
+
+				const current = new Map(
+					rows.map(row => [row[0], row])
+				)
+
+				const fields = [
+					'id', 'name',
+					'int1', 'int2', 'int3',
+					'int4', 'int5', 'int6',
+					'bool1', 'bool2', 'int7'
+				]
+
+				if (!this._lastRackConfig) {
+					this._log('debug', '[PROLINK_RACK_NAMES]',
+						rows.map(r => ({
+							rack: r[0] + 1,
+							name: r[1]
+						}))
+					)
+				} else {
+					for (const row of rows) {
+						const previous = this._lastRackConfig.get(row[0])
+
+						if (!previous) continue
+
+						const changes = row.flatMap((value, index) =>
+							Object.is(value, previous[index])
+								? []
+								: [{
+									field: fields[index],
+									from: previous[index],
+									to: value
+								}]
+						)
+						
+						if (changes.length > 0) {
+							this._log('debug', '[PROLINK_RACK_CHANGED]', {
+								rack: row[0] + 1,
+								name: row[1],
+								changes
+							})
+						}
+					}
+				}
+
+				this._lastRackConfig = current
+				return
+			}
+
+
+			if (path === '/waves.com/remote/ResultCommand') {
+				const [sequence, resultCode, resultText] = args
+
+				this._log('debug', '[PROLINK_COMMAND_RESULT]', {
+					sequence,
+					resultCode,
+					resultText
+				})
+
+				this.setVariableValues({
+					prolink_last_ack_sequence: sequence,
+					prolink_last_result: resultCode,
+					prolink_last_result_text: resultText
+				})
+
+				return
+			}
+
+			// Andere OSC-Nachrichten
+			this._log('debug', '[PROLINK_RX]', {
+				path,
+				args
+			})
+		}
 	}
 
 	// Companion lifecycle method: Called when the module is initialized
@@ -72,6 +270,7 @@ class ModuleInstance extends InstanceBase {
 		this._destroyed = true
 		this._controlGeneration++
 		this._prolinkReady = false
+		this._prolinkObservations?.reset()
 		this._transportRevision++
 		this._transportSwitching = true
 		await this._transportOperations
@@ -621,7 +820,10 @@ class ModuleInstance extends InstanceBase {
 
 	_buildRackChoices() {
 		if (this._transport() === 'prolink')
-			return Array.from({ length: this.rackCount }, (_, i) => ({ id: String(i + 1), label: `Rack ${i + 1}` }))
+			return Array.from({ length: this.rackCount }, (_, i) => ({
+				id: String(i + 1),
+				label: this._prolinkObservations?.racks.get(i + 1)?.name || `Rack ${i + 1}`,
+			}))
 		return this.hotMap.map((entry) => ({
 			id: String(entry.rack),
 			label: `Rack ${entry.rack} (Plugin ${entry.plugin}, Snapshot ${entry.snapshot})`,
@@ -660,7 +862,8 @@ class ModuleInstance extends InstanceBase {
 		if (this._destroyed || this._transport() !== 'prolink' || !this._prolinkReady)
 			return this._controlFailure('ProLink is not ready; command was not queued')
 		try {
-			this._prolink.send(command, id)
+			const sequence = this._prolink.send(command, id)
+			this._prolinkObservations.track(command, sequence)
 			// Legacy Generic-MIDI triggers watch last_action_timestamp. Keep that pulse MIDI-only.
 			this.setVariableValues({ control_last_error: '', prolink_last_send_timestamp: Date.now() })
 			this._updateVariables()
@@ -727,6 +930,12 @@ class ModuleInstance extends InstanceBase {
 
 	_prolinkStateChanged(state, error) {
 		if (this._destroyed) return
+		if (state !== 'connected') {
+			this._prolinkObservations?.reset()
+			// Force a fresh initial debug snapshot after reconnect.
+			this._lastRackConfig = null
+			this._lastTouchOwnership = undefined
+		}
 		this.setVariableValues({ prolink_state: state, prolink_error: error || '' })
 		this.checkFeedbacks?.('prolink_connected')
 		if (this._transport() !== 'prolink') return
