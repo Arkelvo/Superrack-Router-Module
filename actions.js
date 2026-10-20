@@ -1,4 +1,5 @@
 const { resolveRackForChannel } = require('./lib/midi-map')
+const { createProLinkSnapshotActions } = require('./lib/prolink-snapshot-actions')
 
 // Only these commands are enabled by the experimental ProLink action layer.
 const EXTENSION_RANGES = Object.freeze({
@@ -76,6 +77,7 @@ module.exports = function (self) {
 	const hotPluginChoices = self._buildHotPluginChoices ? self._buildHotPluginChoices() : []
 
 	self.setActionDefinitions({
+		...createProLinkSnapshotActions(self),
 		...Object.fromEntries(
 			[
 				['prolink_recall_snapshot', 'RecallSnapshot', 'ProLink: Recall snapshot by provider ID'],
