@@ -3,8 +3,8 @@ const { resolveRackForChannel } = require('./lib/midi-map')
 // Only these commands are enabled by the experimental ProLink action layer.
 const EXTENSION_RANGES = Object.freeze({
 	NavigatePlugin: [0, 1],
-	NavigateRack: [0, 1], // Raw value: direction semantics require live verification.
-	SetTempo: [40, 500],
+	NavigateRack: [0, 1], // Live verified: 0 = next, 1 = previous.
+	SetTempo: [20, 300], // Conservative user-interface limit, not a known protocol limit.
 	GetRackName: [0, 63], // Raw provider uiTrackID: do not infer rack ordinal semantics.
 	GetRacksInfo: [0, 63],
 	GetSnapshotName: [0, 2147483647],
@@ -76,10 +76,10 @@ module.exports = function (self) {
 			callback: async (event) => self.runProlinkExtension('NavigatePlugin', event.options.direction),
 		},
 		prolink_navigate_rack: {
-			name: 'ProLink: Navigate rack (experimental direction)',
+			name: 'ProLink: Navigate rack',
 			options: [{
-				id: 'direction', type: 'dropdown', label: 'Raw direction (live verification required)',
-				choices: [{ id: 0, label: '0' }, { id: 1, label: '1' }],
+				id: 'direction', type: 'dropdown', label: 'Direction',
+				choices: [{ id: 0, label: 'Next rack' }, { id: 1, label: 'Previous rack' }],
 				default: 0,
 			}],
 			callback: async (event) => self.runProlinkExtension('NavigateRack', event.options.direction),

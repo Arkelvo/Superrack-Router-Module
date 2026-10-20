@@ -9,6 +9,17 @@ module.exports = async function (self) {
 			defaultStyle: { bgcolor: combineRgb(0, 100, 0), color: combineRgb(255, 255, 255) },
 			callback: () => self.config?.controlTransport === 'prolink' && self._prolink?.state === 'connected',
 		},
+		prolink_controller_observed: {
+			name: 'Selected ProLink controller properties and value observed',
+			type: 'boolean',
+			options: [],
+			defaultStyle: { bgcolor: combineRgb(0, 100, 0), color: combineRgb(255, 255, 255) },
+			callback: () =>
+				self.config?.controlTransport === 'prolink' &&
+				self._prolink?.state === 'connected' &&
+				self._prolinkObservations?.controllerState?.properties != null &&
+				self._prolinkObservations?.controllerState?.value != null,
+		},
 		prolink_rack_muted: {
 			name: 'SuperRack rack muted (observed)',
 			type: 'boolean',
@@ -46,7 +57,6 @@ module.exports = async function (self) {
 		sequence_running: {
 			name: 'sequence running',
 			type: 'boolean',
-			label: 'sequence running',
 			options: [],
 			defaultStyle: { bgcolor: combineRgb(200, 120, 0), color: combineRgb(0, 0, 0) },
 			callback: () => self.state.sequenceRunning === true,
