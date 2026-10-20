@@ -20,79 +20,6 @@ const {
 
 const MIDI_STEP_DELAY_MS = 50
 
-
-function decodeProlinkOsc(payload) {
-	let offset = 0
-
-	const readString = () => {
-		const end = payload.indexOf(0, offset)
-		if (end < 0) throw new Error('Invalid OSC string')
-
-		const value = payload.toString('utf8', offset, end)
-		offset = (end + 4) & ~3
-
-		if (offset > payload.length) {
-			throw new Error('Invalid OSC padding')
-		}
-		return value
-	}
-
-	const readInt = () => {
-		if (offset + 4 > payload.length) {
-			throw new Error('Truncated OSC integer')
-		}
-		const value = payload.readInt32BE(offset)
-		offset += 4
-		return value
-	}
-
-	const path = readString()
-	const tags = readString()
-
-	if (!tags.startsWith(',')) {
-		throw new Error('Invalid OSC type tags')
-	}
-
-	let index = 1
-
-	const readValue = () => {
-		const type = tags[index++]
-
-		switch (type) {
-			case 'i': return readInt()
-			case 's': return readString()
-			case 'T': return true
-			case 'F': return false
-			case '[': {
-				const values = []
-				while (
-					index < tags.length &&
-					tags[index] !== ']'
-					) {
-					values.push(readValue())
-				}
-				if (tags[index++] !== ']') {
-					throw new Error('Unclosed OSC array')
-				}
-				return values
-			}
-			default:
-				throw new Error(`Unsupported OSC type: ${type}`)
-		}
-	}
-
-	const args = []
-	while (index < tags.length) {
-		args.push(readValue())
-	}
-
-	if (offset !== payload.length) {
-		throw new Error('Unexpected OSC trailing data')
-	}
-
-	return { path, args }
-}
-
 class ModuleInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
@@ -918,7 +845,16 @@ class ModuleInstance extends InstanceBase {
 				} else if (transport === 'midi') {
 					await startMidiService(this)
 				} else {
-					throw new Error('Unknown control transport')
+					this._transportConfig = null
+					this._log('error', 'Control transport switch failed: Unknown control transport')
+
+					if (!this._destroyed) {
+						this.updateStatus(
+							InstanceStatus.ConnectionFailure,
+							'Unknown control transport',
+						)
+					}
+					return
 				}
 				if (this._destroyed || revision !== this._transportRevision) return
 				this._transportConfig = snapshot

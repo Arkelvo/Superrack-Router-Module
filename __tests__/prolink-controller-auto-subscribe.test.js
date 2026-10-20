@@ -113,7 +113,7 @@ test('send failure is surfaced without blocking snapshot synchronization or cras
 test('timeout is unconfirmed, not falsely marked rejected, and reset clears it', () => {
   jest.useFakeTimers()
   try {
-    const { obs, values, emit } = setup()
+    const { values, emit } = setup()
     emit('connected')
     jest.advanceTimersByTime(2501)
     expect(values.prolink_controller_auto_subscription_status).toBe('unconfirmed')
