@@ -6,6 +6,7 @@ const UpdateVariableDefinitions = require('./variables')
 const defaults = require('./default-variables')
 const { startHttpServer, stopHttpServer } = require('./ui/http')
 const { applyMidiStepToVariables } = require('./lib/midi-map')
+const { decodeOsc } = require('./lib/prolink-osc')
 const { ProLinkService } = require('./lib/prolink-service')
 const { ProLinkObservations } = require('./lib/prolink-observations')
 const os = require('os')
@@ -136,7 +137,7 @@ class ModuleInstance extends InstanceBase {
 			let message
 
 			try {
-				message = decodeProlinkOsc(frame.payload)
+				message = decodeOsc(frame.payload)
 			} catch (error) {
 				this._log('debug', '[PROLINK_RX_RAW]', {
 					error: error.message,
