@@ -5,7 +5,6 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Patch Mappings</title>
 		<link rel="stylesheet" href="/patch/style.css" />
-
 		<link rel="apple-touch-icon" sizes="180x180" href="/patch/apple-touch-icon.png">
 		<link rel="icon" type="image/png" sizes="32x32" href="/patch/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/patch/favicon-16x16.png">
@@ -20,9 +19,7 @@
 						<button id="home-btn" title="Home" aria-label="Home">&#8962;</button>
 						<button id="load-btn" title="Refresh Mapping" aria-label="Refresh Mapping">&#x21BB;</button>
 						<button id="clear-btn" title="Clear Mapping" aria-label="Clear Mapping">&#x2715;</button>
-						<!-- Verstecktes File-Input -->
 						<input id="import-input" type="file" accept="application/json" />
-						<!-- Konsistenter Button für Import -->
 						<button id="import-btn" title="Import Mapping" aria-label="Import Mapping">&#x2B06;</button>
 						<button id="export-btn" title="Export JSON" aria-label="Export JSON">&#x2B07;</button>
 					</div>
@@ -30,25 +27,21 @@
 				</div>
 			</header>
 			<div id="alert-container"></div>
-
 			<section class="patch-grid-wrapper" aria-label="Patchfeld">
 				<div id="patch-matrix-container" role="grid" aria-colcount="" aria-rowcount=""></div>
 			</section>
 		</div>
-
 		<script type="text/javascript">
 			const UPDATE_URL = '/patch/update'
 			const MAPPING_URL = '/patch/mappings'
 			const EXPORT_NAME = 'patch-rack'
-
 			const PATCH_CONTAINER = document.getElementById('patch-matrix-container')
-
 			function initPatchMatrix() {
 				fetch(MAPPING_URL).then((res) => startupPatchMatrix(res, 'Rack'))
-
 				checkHealth()
 			}
 		</script>
 		<script src="/patch/app.js" type="text/javascript"></script>
+		<script src="/patch/patch-state.js" type="text/javascript"></script>
 	</body>
 </html>
