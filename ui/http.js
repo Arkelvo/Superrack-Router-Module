@@ -1,5 +1,6 @@
 const fastifyFactory = require('fastify')
 const fastifyStatic = require('@fastify/static')
+const { getPatchUiState } = require('../lib/patch-ui-state')
 
 const _startHttpServer = async function (instance) {
 	if (instance._http.restarting) {
@@ -18,29 +19,26 @@ const _startHttpServer = async function (instance) {
 		prefix: '/patch/',
 	})
 
-	fastify.get('/test', async (req, reply) => {
-		return reply.sendFile('./public/home.html')
-	})
-	fastify.get('/', async (req, reply) => {
-		return reply.sendFile('./public/home.html')
-	})
-	fastify.get('/patch', async (req, reply) => {
-		return reply.sendFile('./public/rack-channel.html')
-	})
-	fastify.get('/patch/', async (req, reply) => {
-		return reply.sendFile('./public/rack-channel.html')
+	// Temporary redirect, independent of transport. Avoid redirecting API/assets.
+	fastify.get('/', async (_req, reply) => reply.redirect('/patch', 307))
+	fastify.get('/test', async (_req, reply) => reply.sendFile('./public/home.html'))
+	fastify.get('/patch', async (_req, reply) => reply.sendFile('./public/rack-channel.html'))
+	fastify.get('/patch/', async (_req, reply) => reply.sendFile('./public/rack-channel.html'))
+
+	fastify.get('/health', async () => ({
+		status: 'ok',
+		sequenceRunning: !!instance.state?.sequenceRunning,
+		activeSourceIndex: instance.state?.activeSourceIndex ?? null,
+	}))
+
+	// Only current, observed names are projected to the UI. No request sends or config changes.
+	fastify.get('/patch/state', async (_req, reply) => {
+		reply.header('Cache-Control', 'no-store')
+		return getPatchUiState(instance)
 	})
 
-	fastify.get('/health', async (req, reply) => {
-		return {
-			status: 'ok',
-			sequenceRunning: !!instance.state?.sequenceRunning,
-			activeSourceIndex: instance.state?.activeSourceIndex ?? null,
-		}
-	})
-
-	// New endpoint: Get current mappings from config
-	fastify.get('/patch/mappings', async (req, reply) => {
+	// Get current mappings from config
+	fastify.get('/patch/mappings', async (_req, reply) => {
 		const maxRacks = parseInt(instance.config?.maxRacks, 10) || instance.rackCount || 64
 		reply.code(200)
 		return {
@@ -50,7 +48,7 @@ const _startHttpServer = async function (instance) {
 		}
 	})
 
-	// New endpoint: Apply mappings (connect)
+	// Apply mappings (connect)
 	fastify.post('/patch/update', async (req, reply) => {
 		try {
 			const body = req.body || {}
@@ -59,7 +57,6 @@ const _startHttpServer = async function (instance) {
 				length: Array.isArray(mapping) ? mapping.length : 0,
 				sample: Array.isArray(mapping) ? mapping.slice(1, 5) : null,
 			})
-			// Nur speichern, wenn sich das Mapping geändert hat
 			const isChanged = JSON.stringify(instance.config.racks) !== JSON.stringify(mapping)
 			if (isChanged) {
 				instance.config.racks = mapping
@@ -103,7 +100,6 @@ const _startHttpServer = async function (instance) {
 
 			rackConfig.value = parseInt(newValue, 10)
 			instance.config.racks[rackId] = rackConfig
-
 			instance.saveConfig(instance.config)
 			instance._applyConfigToLocalScopes()
 			instance.updateActions()
@@ -118,19 +114,24 @@ const _startHttpServer = async function (instance) {
 		}
 	})
 
-	// MIDI Plugin Mapping UI
+	// Keep the MIDI mapping data persisted, but hide MIDI-only editors in ProLink mode.
+	const midiEditorUnavailable = (_req, reply) => {
+		if (instance.config?.controlTransport !== 'prolink') return false
+		reply.code(404).send({ status: 404, error: 'MIDI patch editor is unavailable in ProLink mode' })
+		return true
+	}
+
 	fastify.get('/midi/plugin', async (req, reply) => {
+		if (midiEditorUnavailable(req, reply)) return reply
 		return reply.sendFile('./public/midi-plugin.html')
 	})
-	// MIDI Snapshot Mapping UI
 	fastify.get('/midi/snapshot', async (req, reply) => {
+		if (midiEditorUnavailable(req, reply)) return reply
 		return reply.sendFile('./public/midi-snapshot.html')
 	})
 
-	// API: Get current MIDI plugin mapping
-	fastify.get('/midi/plugin/mapping', async (req, reply) => {
+	fastify.get('/midi/plugin/mapping', async (_req, reply) => {
 		reply.code(200)
-
 		return {
 			success: true,
 			meta: { numX: 128, numY: 12, emptyMapping: instance.hotPlugin.emptyMapping },
@@ -139,27 +140,22 @@ const _startHttpServer = async function (instance) {
 			channel: instance.hotPlugin.channel,
 		}
 	})
-	// API: Update MIDI plugin mapping
 	fastify.post('/midi/plugin/update', async (req, reply) => {
 		try {
 			const mapping = req.body?.mapping
 			const eventType = req.body?.eventType
 			const midiChannel = req.body?.channel
-
-			if (!mapping && !eventType && !midiChannel) throw new Error('No mapping, eventType or channel provided')
+			if (!mapping && !eventType && !midiChannel) {
+				reply.code(400)
+				return { status: 400, error: 'No mapping, eventType or channel provided' }
+			}
 
 			let isChanged = true
 			if (mapping) {
 				isChanged = JSON.stringify(instance.config.hotPlugin?.mapping) !== JSON.stringify(mapping)
-				if (isChanged) {
-					instance.hotPlugin.mapping = mapping
-				}
+				if (isChanged) instance.hotPlugin.mapping = mapping
 			}
-
-			if (eventType) {
-				instance.hotPlugin.type = eventType
-			}
-
+			if (eventType) instance.hotPlugin.type = eventType
 			if (midiChannel) {
 				if (parseInt(midiChannel) === parseInt(instance.hotSnapshot.channel)) {
 					reply.code(400)
@@ -167,7 +163,6 @@ const _startHttpServer = async function (instance) {
 				}
 				instance.hotPlugin.channel = midiChannel
 			}
-
 			if (isChanged) {
 				instance.config.hotPlugin = instance.hotPlugin
 				instance.saveConfig(instance.config)
@@ -176,7 +171,6 @@ const _startHttpServer = async function (instance) {
 				instance.updateFeedbacks()
 				instance.updateVariableDefinitions()
 			}
-
 			reply.code(200)
 			return { status: 200, result: { updated: true } }
 		} catch (e) {
@@ -185,8 +179,7 @@ const _startHttpServer = async function (instance) {
 		}
 	})
 
-	// API: Get current MIDI snapshot mapping
-	fastify.get('/midi/snapshot/mapping', async (req, reply) => {
+	fastify.get('/midi/snapshot/mapping', async (_req, reply) => {
 		reply.code(200)
 		return {
 			success: true,
@@ -196,36 +189,29 @@ const _startHttpServer = async function (instance) {
 			channel: instance.hotSnapshot.channel,
 		}
 	})
-	// API: Update MIDI snapshot mapping
 	fastify.post('/midi/snapshot/update', async (req, reply) => {
 		try {
 			const mapping = req.body?.mapping
 			const eventType = req.body?.eventType
 			const midiChannel = req.body?.channel
-
-			if (!mapping && !eventType && !midiChannel) throw new Error('No mapping, eventType or channel provided')
+			if (!mapping && !eventType && !midiChannel) {
+				reply.code(400)
+				return { status: 400, error: 'No mapping, eventType or channel provided' }
+			}
 
 			let isChanged = true
 			if (mapping) {
 				isChanged = JSON.stringify(instance.config.hotSnapshot?.mapping) !== JSON.stringify(mapping)
-				if (isChanged) {
-					instance.hotSnapshot.mapping = mapping
-				}
+				if (isChanged) instance.hotSnapshot.mapping = mapping
 			}
-
-			if (eventType) {
-				instance.hotSnapshot.type = eventType
-			}
-
+			if (eventType) instance.hotSnapshot.type = eventType
 			if (midiChannel) {
-				// Validierung: Channel darf nicht gleich wie hotPlugin.channel sein
 				if (parseInt(midiChannel) === parseInt(instance.hotPlugin.channel)) {
 					reply.code(400)
 					return { status: 400, error: 'MIDI Channel darf nicht gleichzeitig für Plugin und Snapshot verwendet werden.' }
 				}
 				instance.hotSnapshot.channel = midiChannel
 			}
-
 			if (isChanged) {
 				instance.config.hotSnapshot = instance.hotSnapshot
 				instance.saveConfig(instance.config)
@@ -234,7 +220,6 @@ const _startHttpServer = async function (instance) {
 				instance.updateFeedbacks()
 				instance.updateVariableDefinitions()
 			}
-
 			reply.code(200)
 			return { status: 200, result: { updated: true } }
 		} catch (e) {
@@ -245,7 +230,7 @@ const _startHttpServer = async function (instance) {
 
 	const host = '0.0.0.0'
 	try {
-		await fastify.listen({ port: instance._http.port, host: host })
+		await fastify.listen({ port: instance._http.port, host })
 		instance._http.server = fastify
 		instance._http.started = true
 		instance._log('info', `HTTP server started, listening on ${host}:${instance._http.port}`)
@@ -271,7 +256,4 @@ const _stopHttpServer = async function (instance) {
 	instance._http.restarting = false
 }
 
-module.exports = {
-	startHttpServer: _startHttpServer,
-	stopHttpServer: _stopHttpServer,
-}
+module.exports = { startHttpServer: _startHttpServer, stopHttpServer: _stopHttpServer }

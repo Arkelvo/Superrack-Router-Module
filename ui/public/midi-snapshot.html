@@ -1,70 +1,66 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>MIDI Snapshot Mapping</title>
-	<link rel="stylesheet" href="/patch/style.css" />
-
-	<link rel="apple-touch-icon" sizes="180x180" href="/patch/apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="/patch/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="/patch/favicon-16x16.png">
-	<link rel="manifest" href="/patch/site.webmanifest">
+    <meta charset="UTF-8" />
+		<!-- Static assets are siblings in ui/public; Fastify serves them at /patch/. -->
+		<!--suppress HtmlUnknownTarget -->
+		<base href="/patch/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MIDI Snapshot Mapping</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
-	<div class="container">
-		<header>
-			<h1>MIDI Snapshot Mapping</h1>
-			<div class="header-bar">
-				<div class="controls">
-					<button id="home-btn" title="Home" aria-label="Home">&#8962;</button>
-					<button id="load-btn" title="Refresh Mapping" aria-label="Refresh Mapping">&#x21BB;</button>
-					<button id="clear-btn" title="Clear Mapping" aria-label="Clear Mapping">&#x2715;</button>
-					<input id="import-input" type="file" accept="application/json" />
-					<button id="import-btn" title="Import Mapping" aria-label="Import Mapping">&#x2B06;</button>
-					<button id="export-btn" title="Export JSON" aria-label="Export JSON">&#x2B07;</button>
-				</div>
-				<span id="status" class="status disconnected">Disconnected</span>
-			</div>
-		</header>
-		<div id="alert-container"></div>
-
-		<div class="midi-settings-bar">
-			<label>
-				MIDI Event Type:
-				<select id="midi-type">
-					<option style="display: none">no selection</option>
-					<option value="cc">CC</option>
-					<option value="noteon">Note On</option>
-					<option value="program">Program Change</option>
-				</select>
-			</label>
-			<label>
-				MIDI Channel:
-				<input id="midi-channel" type="number" min="1" max="16">
-			</label>
-		</div>
-
-		<section class="patch-grid-wrapper" aria-label="Patchfeld">
-			<div id="midi-snapshot-matrix-container" role="grid" aria-colcount="" aria-rowcount=""></div>
-		</section>
-	</div>
-
-	<script type="text/javascript">
-		const UPDATE_URL = '/midi/snapshot/update'
-		const MAPPING_URL = '/midi/snapshot/mapping'
-		const EXPORT_NAME = 'patch-snapshot'
-
-		const PATCH_CONTAINER = document.getElementById('midi-snapshot-matrix-container')
-
-		function initPatchMatrix() {
-			fetch(MAPPING_URL).then((res) => startupPatchMatrix(res, 'Hot Snapshot'))
-
-			checkHealth()
-		}
-	</script>
-	<script src="/patch/app.js" type="text/javascript"></script>
-	<script src="/patch/midi.js" type="text/javascript"></script>
+    <div class="container">
+        <header>
+            <h1>MIDI Snapshot Mapping</h1>
+            <div class="header-bar">
+                <div class="controls">
+                    <button id="home-btn" title="Home" aria-label="Home">&#8962;</button>
+                    <button id="load-btn" title="Refresh Mapping" aria-label="Refresh Mapping">&#x21BB;</button>
+                    <button id="clear-btn" title="Clear Mapping" aria-label="Clear Mapping">&#x2715;</button>
+                    <input id="import-input" type="file" accept="application/json" />
+                    <button id="import-btn" title="Import Mapping" aria-label="Import Mapping">&#x2B06;</button>
+                    <button id="export-btn" title="Export JSON" aria-label="Export JSON">&#x2B07;</button>
+                </div>
+                <span id="status" class="status disconnected">Disconnected</span>
+            </div>
+        </header>
+        <div id="alert-container"></div>
+        <div class="midi-settings-bar">
+            <label>
+                MIDI Event Type:
+                <select id="midi-type">
+                    <option style="display: none">no selection</option>
+                    <option value="cc">CC</option>
+                    <option value="noteon">Note On</option>
+                    <option value="program">Program Change</option>
+                </select>
+            </label>
+            <label>
+                MIDI Channel:
+                <input id="midi-channel" type="number" min="1" max="16">
+            </label>
+        </div>
+        <section class="patch-grid-wrapper" aria-label="Patchfeld">
+            <div id="midi-snapshot-matrix-container" role="grid" aria-colcount="" aria-rowcount=""></div>
+        </section>
+    </div>
+    <script type="text/javascript">
+        const UPDATE_URL = '/midi/snapshot/update'
+        const MAPPING_URL = '/midi/snapshot/mapping'
+        const EXPORT_NAME = 'patch-snapshot'
+        const PATCH_CONTAINER = document.getElementById('midi-snapshot-matrix-container')
+        function initPatchMatrix() {
+            fetch(MAPPING_URL).then((res) => startupPatchMatrix(res, 'Hot Snapshot'))
+            checkHealth()
+        }
+    </script>
+    <script src="app.js" type="text/javascript"></script>
+    <script src="midi.js" type="text/javascript"></script>
+    <script src="patch-state.js" type="text/javascript"></script>
 </body>
 </html>
-

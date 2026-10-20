@@ -1,0 +1,75 @@
+'use strict'
+
+// The rack matrix is owned by app.js. Update *only* its labels so mapped
+// cells, selection and event handlers survive live SuperRack name changes.
+;(function () {
+	const POLL_MS = 2000
+	const rackMatrix = document.getElementById('patch-matrix-container')
+	const midiOnlyLinks = Array.from(document.querySelectorAll('[data-midi-only]'))
+	const isMidiEditor = typeof window !== 'undefined' && /^\/midi\/(plugin|snapshot)$/.test(window.location.pathname)
+	if (!rackMatrix && !midiOnlyLinks.length && !isMidiEditor) return
+
+	// The matrix is rendered by app.js using an inline 100px first column.
+	// Replace only that track; max-content measures the *longest* rack label
+	// and applies one shared width to every row. All channel tracks stay intact.
+	function resizeRackColumn() {
+		if (!rackMatrix || typeof rackMatrix.querySelector !== 'function') return
+		const table = rackMatrix.querySelector('.patch-table')
+		if (!table || !table.style) return
+		const template = table.style.gridTemplateColumns
+		if (typeof template === 'string' && /^100px(?=\s+repeat\()/i.test(template)) {
+			table.style.gridTemplateColumns = template.replace(/^100px/i, 'max-content')
+		}
+	}
+	if (rackMatrix && typeof MutationObserver === 'function') {
+		new MutationObserver(resizeRackColumn).observe(rackMatrix, { childList: true })
+	}
+
+	function render(state) {
+		const prolink = state?.transport === 'prolink'
+		if (isMidiEditor && prolink) {
+			window.location.replace('/patch')
+			return
+		}
+		for (const el of midiOnlyLinks) {
+			el.hidden = prolink
+			el.style.display = prolink ? 'none' : ''
+		}
+		if (!rackMatrix) return
+		const connected = prolink && state.prolinkConnected === true
+		const knownNames = new Map()
+		if (connected && Array.isArray(state.racks)) {
+			for (const entry of state.racks) {
+				if (Number.isInteger(entry.id) && entry.id >= 1 && entry.observed === true &&
+					typeof entry.name === 'string' && entry.name.trim()) {
+					knownNames.set(entry.id, entry.name)
+				}
+			}
+		}
+		resizeRackColumn()
+		const labels = rackMatrix.querySelectorAll('.patch-y-label')
+		labels.forEach((label, index) => {
+			const id = index + 1
+			const text = knownNames.get(id) || `Rack ${id}`
+			if (label.textContent !== text) label.textContent = text
+			label.title = text
+		})
+	}
+
+	async function poll() {
+		try {
+			const response = await fetch('/patch/state', { cache: 'no-store' })
+			if (!response.ok) {
+				render({ transport: 'prolink', prolinkConnected: false, racks: [] })
+				return
+			}
+			render(await response.json())
+		} catch (_error) {
+			// Without a fresh server response no cached SuperRack name is trusted.
+			render({ transport: 'prolink', prolinkConnected: false, racks: [] })
+		} finally {
+			setTimeout(poll, POLL_MS)
+		}
+	}
+	poll()
+})()

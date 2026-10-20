@@ -1,0 +1,7 @@
+/* Rack patch only: the first Grid track is sized from the longest label.
+   ui/public/patch-state.js preserves the dynamic channel count and switches
+   the 100px inline first track to max-content after app.js has rendered it. */
+#patch-matrix-container .patch-y-label {
+  white-space: nowrap;
+  overflow: visible;
+}
