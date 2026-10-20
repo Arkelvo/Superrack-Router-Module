@@ -27,7 +27,7 @@ Dieses Dokument beschreibt die unterstützte Kommunikation zwischen dem Companio
 | `GetCPUUsage` | `GiveCPUUsage` |
 | `GetSessionDirtyState` | `GiveSessionDirtyState` |
 
-Die Zuordnung stammt aus den statisch identifizierten Senderadressen. Die derzeit im Modul angezeigten Antwortargumente bleiben **raw JSON**, solange das jeweilige Datenschema nicht durch Mitschnitt und Gegenprüfung verifiziert ist. Insbesondere sind Snapshot-Provider-ID und Snapshot-Hot-Slot nicht gleichzusetzen.
+Die Zuordnung stammt aus statisch identifizierten Senderadressen. Nur die inzwischen **live verifizierten Snapshot-Antwortschemata** werden zusätzlich strukturiert verarbeitet: `GiveCurrentSnapshotNumber` als signierter Integer, `GiveSnapshotName` als String und `GiveListOfSnapshot` als `[count,id,name,...]` nach der Request-ID. Andere `Give*`-Antworten bleiben im Modul weiterhin als Rohdaten verfügbar, bis ihr Schema belegt ist. Snapshot-Provider-ID und Snapshot-Hot-Slot sind nicht gleichzusetzen.
 
 ## Lebenszyklus einer Abfrage
 

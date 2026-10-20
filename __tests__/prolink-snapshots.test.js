@@ -53,15 +53,55 @@ test('snapshot names are keyed by original provider ID across interleaved replie
 	expect(values.prolink_snapshot_names_json).toBe('{}')
 })
 
-test('lists retain raw nested OSC values without inventing indexes or names', () => {
-	const { obs, values } = fixture()
-	obs.track('GetListOfSnapshots', 13)
-	obs.receive(frame('GiveListOfSnapshot', ',ii', [i32(13), i32(3)]))
+test('2026-10-20 live GiveListOfSnapshot layout yields real provider IDs and names', () => {
+	const { obs, values, instance } = fixture()
+	obs.track('GetListOfSnapshots', 0)
+	obs.receive(frame('GiveListOfSnapshot', ',iiisis', [i32(0), i32(2), i32(0), oscString('Test'), i32(1), oscString('Test2')]))
 	expect(values.prolink_snapshot_list_known).toBe(true)
-	expect(values.prolink_snapshot_list_raw).toBe('[3]')
-	expect(values.prolink_snapshot_names_json).toBeUndefined()
+	expect(values.prolink_snapshot_list_raw).toBe('[2,0,"Test",1,"Test2"]')
+	expect(values.prolink_snapshot_count).toBe(2)
+	expect(JSON.parse(values.prolink_snapshot_list_json)).toEqual([{ id: 0, name: 'Test' }, { id: 1, name: 'Test2' }])
+	expect(JSON.parse(values.prolink_snapshot_names_json)).toEqual({ '0': 'Test', '1': 'Test2' })
+	expect(obs.pending.size).toBe(0)
+	expect(instance.updateActions).toHaveBeenCalledTimes(1)
 	obs.reset()
 	expect(values.prolink_snapshot_list_known).toBe(false)
+	expect(values.prolink_snapshot_list_json).toBe('[]')
+	expect(values.prolink_snapshot_count).toBe('')
+	expect(instance.updateActions).toHaveBeenCalledTimes(2)
+})
+
+test('current snapshot 1 to 0 and snapshot name Test match exact observed responses', () => {
+	const {obs,values} = fixture()
+	obs.track('GetCurrentSnapshotNumber', 1)
+	obs.receive(frame('GiveCurrentSnapshotNumber', ',ii', [i32(1), i32(1)]))
+	expect(values.prolink_snapshot_current_number_raw).toBe(1)
+	obs.track('GetCurrentSnapshotNumber', 9)
+	obs.receive(frame('GiveCurrentSnapshotNumber', ',ii', [i32(9), i32(0)]))
+	expect(values.prolink_snapshot_current_number_raw).toBe(0)
+	obs.track('GetSnapshotName', 12, 0)
+	obs.receive(frame('GiveSnapshotName', ',is', [i32(12), oscString('Test')]))
+	expect(values.prolink_snapshot_last_name).toBe('Test')
+	expect(values.prolink_snapshot_last_name_target_id).toBe(0)
+	obs.reset()
+})
+
+test('malformed list does not consume pending request; empty and reordered lists work', () => {
+	const { obs, values } = fixture()
+	obs.track('GetListOfSnapshots', 13)
+	obs.receive(frame('GiveListOfSnapshot', ',ii', [i32(13), i32(3)])) // count mismatch
+	expect(obs.pending.size).toBe(1)
+	expect(values.prolink_snapshot_list_known).toBeUndefined()
+	obs.receive(frame('GiveListOfSnapshot', ',iiisis', [i32(13), i32(2), i32(1), oscString('B'), i32(1), oscString('Duplicate')]))
+	expect(obs.pending.size).toBe(1)
+	obs.receive(frame('GiveListOfSnapshot', ',iiisis', [i32(13), i32(2), i32(13), oscString('D'), i32(4), oscString('E')]))
+	expect(values.prolink_snapshot_count).toBe(2)
+	expect(JSON.parse(values.prolink_snapshot_names_json)).toEqual({ '4': 'E', '13': 'D' })
+	obs.track('GetListOfSnapshots', 14)
+	obs.receive(frame('GiveListOfSnapshot', ',ii', [i32(14), i32(0)]))
+	expect(values.prolink_snapshot_count).toBe(0)
+	expect(values.prolink_snapshot_names_json).toBe('{}')
+	obs.reset()
 })
 
 test('only matching responses mutate snapshot state, malformed names leave request pending', () => {
@@ -76,11 +116,15 @@ test('only matching responses mutate snapshot state, malformed names leave reque
 	obs.reset()
 })
 
-test('independent snapshot state validation is bounded and does not infer list shape', () => {
+test('independent snapshot validation enforces live count/id/name wire schema', () => {
 	const state = new ProLinkSnapshots({ setVariableValues: jest.fn() })
 	expect(state.accepts('GiveSnapshotName', ['name'], { argument: undefined })).toBe(false)
 	expect(state.accepts('GiveSnapshotName', ['name'], { argument: 0 })).toBe(true)
-	expect(state.accepts('GiveListOfSnapshot', ['x'.repeat(66000)], {})).toBe(false)
+	expect(state.accepts('GiveListOfSnapshot', [2, 0, 'A', 1, 'B'], {})).toBe(true)
+	expect(state.accepts('GiveListOfSnapshot', [2, 0, 'A'], {})).toBe(false)
+	expect(state.accepts('GiveListOfSnapshot', [2, 0, 'A', 0, 'B'], {})).toBe(false)
+	expect(state.accepts('GiveListOfSnapshot', [1, 0, 'x'.repeat(66000)], {})).toBe(false)
+	expect(state.accepts('GiveListOfSnapshot', [0], {})).toBe(true)
 	expect(state.accepts('GiveCurrentSnapshotNumber', [-1], {})).toBe(true)
 })
 

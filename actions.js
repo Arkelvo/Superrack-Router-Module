@@ -56,6 +56,21 @@ module.exports = function (self) {
 		return true
 	}
 
+	// Available only after a validated GiveListOfSnapshot. These choices
+	// are provider IDs, not a MIDI hot-snapshot slot or request sequence.
+	const snapshots = self._prolinkObservations?.snapshots
+	const snapshotChoices = (snapshots?.listKnown ? snapshots.listEntries : []).map(({ id, name }) => ({
+		id: String(id), label: `${name || '(unnamed)'} [ID ${id}]`,
+	}))
+	self.routeKnownProlinkSnapshot = function (command, id) {
+		const providerId = self._prolinkId(id, 0, 2147483647)
+		if (providerId === null || !self._prolinkObservations?.snapshots?.listKnown ||
+			!self._prolinkObservations.snapshots.listEntries.some(entry => entry.id === providerId)) {
+			return self._controlFailure('Snapshot ID is not in the observed list; refresh GetListOfSnapshots first')
+		}
+		return self.routeProlinkSnapshot(command, providerId)
+	}
+
 	const rackChoices = self._buildRackChoices ? self._buildRackChoices() : []
 	const hotSnapshotChoices = self._buildHotSnapshotChoices ? self._buildHotSnapshotChoices() : []
 	const hotPluginChoices = self._buildHotPluginChoices ? self._buildHotPluginChoices() : []
@@ -78,6 +93,17 @@ module.exports = function (self) {
 				},
 			]),
 		),
+		...Object.fromEntries([
+			['prolink_recall_snapshot_named', 'RecallSnapshot', 'Recall'],
+			['prolink_highlight_snapshot_named', 'HighlightSnapshot', 'Highlight'],
+		].map(([key, command, verb]) => [key, {
+			name: `ProLink: ${verb} snapshot from observed list`,
+			options: [{
+				id: 'snapshotId', type: 'dropdown', label: 'Snapshot (SuperRack live list)',
+				choices: snapshotChoices, default: snapshotChoices[0]?.id,
+			}],
+			callback: async event => self.routeKnownProlinkSnapshot(command, event.options.snapshotId),
+		}])),
 		prolink_navigate_plugin: {
 			name: 'ProLink: Navigate plugin in selected rack',
 			options: [{ id: 'direction', type: 'dropdown', label: 'Direction', choices: [
