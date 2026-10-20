@@ -59,7 +59,10 @@
 	async function poll() {
 		try {
 			const response = await fetch('/patch/state', { cache: 'no-store' })
-			if (!response.ok) throw new Error(`HTTP ${response.status}`)
+			if (!response.ok) {
+				render({ transport: 'prolink', prolinkConnected: false, racks: [] })
+				return
+			}
 			render(await response.json())
 		} catch (_error) {
 			// Without a fresh server response no cached SuperRack name is trusted.

@@ -29,7 +29,9 @@ function fixture() {
 test('a connected peer automatically requests a full list with its own request ID', () => {
 	const ctx = fixture()
 	ctx.state('connected')
-	expect(ctx.events).toEqual(['GetListOfSnapshots'])
+	expect(ctx.events).toEqual([
+		'GetListOfSnapshots', 'RequestControllerInfoUpdates', 'GetCPUUsage', 'GetSessionDirtyState',
+	])
 	expect(ctx.service.send).toHaveBeenCalledWith('GetListOfSnapshots')
 	expect(ctx.observations.pending.get(20)).toMatchObject({ command: 'GetListOfSnapshots', expectedReply: 'GiveListOfSnapshot' })
 	expect(ctx.values.prolink_snapshot_sync_status).toBe('requesting')
@@ -50,9 +52,12 @@ test('disconnect clears list and reconnect fetches a new complete list', () => {
 	expect(ctx.values.prolink_snapshot_list_known).toBe(false)
 	expect(ctx.observations.pending.size).toBe(0)
 	ctx.state('connected')
-	expect(ctx.events).toEqual(['GetListOfSnapshots', 'GetListOfSnapshots'])
-	expect(ctx.observations.pending.has(21)).toBe(true)
-	ctx.observations.observeReply('GiveListOfSnapshot', [21, 0])
+	expect(ctx.events).toEqual([
+		'GetListOfSnapshots', 'RequestControllerInfoUpdates', 'GetCPUUsage', 'GetSessionDirtyState',
+		'GetListOfSnapshots', 'RequestControllerInfoUpdates', 'GetCPUUsage', 'GetSessionDirtyState',
+	])
+	expect(ctx.observations.pending.has(24)).toBe(true)
+	ctx.observations.observeReply('GiveListOfSnapshot', [24, 0])
 	expect(ctx.values.prolink_snapshot_count).toBe(0)
 	ctx.observations.reset()
 })
@@ -72,10 +77,12 @@ test('automatic sync is never sent when transport is MIDI, destroyed or send fai
 	ctx.instance.config.controlTransport = 'midi'
 	ctx.state('connected')
 	expect(ctx.service.send).not.toHaveBeenCalled()
+	ctx.state('waiting')
 	ctx.instance.config.controlTransport = 'prolink'
 	ctx.instance._destroyed = true
 	ctx.state('connected')
 	expect(ctx.service.send).not.toHaveBeenCalled()
+	ctx.state('waiting')
 	ctx.instance._destroyed = false
 	ctx.service.send.mockImplementation(() => { throw new Error('socket closed') })
 	ctx.state('connected')

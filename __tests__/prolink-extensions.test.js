@@ -30,7 +30,9 @@ test('preserves legacy OSC commands and supports typed extension commands', () =
 	expect(decodeOsc(encodeOsc('RequestControllerInfoUpdates', 16, false)).args).toEqual([16, false])
 	expect(() => encodeOsc('GetNumRacks', 1, 0)).toThrow(/does not accept/)
 	expect(() => encodeOsc('RequestControllerInfoUpdates', 1, 1)).toThrow(/boolean/)
-	expect(() => encodeOsc('DeleteSnapshot', 1, 0)).toThrow(/Unsupported/)
+	// DeleteSnapshot is supported since P4, but it requires a nonempty array of provider IDs.
+	expect(() => encodeOsc('DeleteSnapshot', 1, 0)).toThrow(/Invalid snapshot ID list/)
+	expect(decodeOsc(encodeOsc('DeleteSnapshot', 1, [0])).args).toEqual([1, 1, 0])
 })
 
 test('decodes float, double and 64-bit integer without losing precision', () => {
@@ -58,7 +60,6 @@ test('stores raw getter replies and focus-bound controller feedback', () => {
 	expect(values.prolink_last_reply_sequence).toBe(5)
 	expect(values.prolink_last_reply_args).toBe('[64]')
 	expect(values.prolink_last_reply_matched).toBe(true)
-
 	const value = Buffer.alloc(8)
 	value.writeDoubleBE(440.25)
 	observer.receive(frame('NotifyControllerValue', ',sd', [oscString('440 Hz'), value]))
@@ -66,7 +67,6 @@ test('stores raw getter replies and focus-bound controller feedback', () => {
 	expect(values.prolink_controller_text).toBe('440 Hz')
 	expect(values.prolink_controller_value).toBe(440.25)
 	expect(values.active_rack).toBeUndefined()
-
 	observer.reset()
 	expect(values.prolink_controller_known).toBe(false)
 	expect(values.prolink_last_reply_command).toBe('')

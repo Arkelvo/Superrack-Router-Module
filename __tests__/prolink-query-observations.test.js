@@ -59,7 +59,8 @@ test('the singular GiveListOfSnapshot name is essential for correlation', () => 
 	obs.receive(frame('GiveListOfSnapshots', ',i', [int32(91)]))
 	expect(values.prolink_last_reply_matched).toBe(false)
 	expect(values.prolink_command_pending).toBe(1)
-	obs.receive(frame('GiveListOfSnapshot', ',i', [int32(91)]))
+	// Valid empty snapshot list: request ID followed by item count 0.
+	obs.receive(frame('GiveListOfSnapshot', ',ii', [int32(91), int32(0)]))
 	expect(values.prolink_last_reply_matched).toBe(true)
 	expect(values.prolink_command_pending).toBe(0)
 	obs.reset()

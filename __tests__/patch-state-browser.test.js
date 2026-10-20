@@ -6,24 +6,6 @@ const vm = require('node:vm')
 
 const browserScript = fs.readFileSync(path.join(__dirname, '../ui/public/patch-state.js'), 'utf8')
 
-function setupBrowser() {
-	const labels = Array.from({ length: 3 }, (_x, i) => ({ textContent: `Rack ${i + 1}`, title: '' }))
-	const links = Array.from({ length: 2 }, () => ({ hidden: true, style: { display: 'none' } }))
-	const queue = []
-	const responses = []
-	const document = {
-		getElementById: (id) => id === 'patch-matrix-container' ? { querySelectorAll: () => labels } : null,
-		querySelectorAll: (selector) => selector === '[data-midi-only]' ? links : [],
-	}
-	const fetch = jest.fn(() => {
-		const next = responses.shift()
-		if (next instanceof Error) return Promise.reject(next)
-		return Promise.resolve({ ok: true, json: async () => next })
-	})
-	vm.runInNewContext(browserScript, { document, fetch, setTimeout: (fn) => queue.push(fn) })
-	return { labels, links, queue, responses, fetch }
-}
-
 const tick = () => new Promise((resolve) => setImmediate(resolve))
 
 test('browser updates rack labels in place, reverts on disconnect and transport switch', async () => {

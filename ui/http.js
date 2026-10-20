@@ -145,7 +145,10 @@ const _startHttpServer = async function (instance) {
 			const mapping = req.body?.mapping
 			const eventType = req.body?.eventType
 			const midiChannel = req.body?.channel
-			if (!mapping && !eventType && !midiChannel) throw new Error('No mapping, eventType or channel provided')
+			if (!mapping && !eventType && !midiChannel) {
+				reply.code(400)
+				return { status: 400, error: 'No mapping, eventType or channel provided' }
+			}
 
 			let isChanged = true
 			if (mapping) {
@@ -191,7 +194,10 @@ const _startHttpServer = async function (instance) {
 			const mapping = req.body?.mapping
 			const eventType = req.body?.eventType
 			const midiChannel = req.body?.channel
-			if (!mapping && !eventType && !midiChannel) throw new Error('No mapping, eventType or channel provided')
+			if (!mapping && !eventType && !midiChannel) {
+				reply.code(400)
+				return { status: 400, error: 'No mapping, eventType or channel provided' }
+			}
 
 			let isChanged = true
 			if (mapping) {
