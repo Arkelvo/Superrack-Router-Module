@@ -36,6 +36,13 @@ module.exports = function (self) {
 		return self._sendProlink(command, number)
 	}
 
+	// Calibrated dB interface remains strictly tied to the verified PSE Threshold.
+	// The generic +/-1..8 magnitude action below stays available for other controls.
+	self.changeFocusedProlinkDb = function (direction, stepDb) {
+		return self._prolinkObservations?.dbAdjust?.request(direction, stepDb) ??
+			self._controlFailure('ProLink dB controller is unavailable')
+	}
+
 	// Focus-bound relative control only; no arbitrary rack, slot or parameter ID.
 	// Require live controller properties and a value to avoid blind manipulation.
 	self.changeFocusedProlinkController = function (direction, steps) {
@@ -139,6 +146,27 @@ module.exports = function (self) {
 			}],
 			callback: async (event) => self.runProlinkExtension(command, event.options.providerId),
 		}])),
+		prolink_controller_db: {
+			name: 'ProLink: Adjust PSE Threshold (dB, calibrated)',
+			options: [
+				{
+					id: 'direction', type: 'dropdown', label: 'Direction',
+					choices: [{ id: -1, label: 'Decrease (-)' }, { id: 1, label: 'Increase (+)' }],
+					default: 1,
+				},
+				{
+					id: 'stepDb', type: 'dropdown', label: 'dB step',
+					choices: [
+						{ id: '0.1', label: '0.1 dB (fine)' },
+						{ id: '0.5', label: '0.5 dB' },
+						{ id: '1', label: '1 dB' },
+						{ id: '3', label: '3 dB (coarse)' },
+					],
+					default: '1',
+				},
+			],
+			callback: async (event) => self.changeFocusedProlinkDb(event.options.direction, event.options.stepDb),
+		},
 		prolink_controller_relative: {
 			name: 'ProLink: Adjust selected Touch-and-Turn controller (relative)',
 			options: [
