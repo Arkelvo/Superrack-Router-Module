@@ -8,6 +8,7 @@ const { startHttpServer, stopHttpServer } = require('./ui/http')
 const { applyMidiStepToVariables } = require('./lib/midi-map')
 const { decodeOsc } = require('./lib/prolink-osc')
 const { ProLinkService } = require('./lib/prolink-service')
+const { ProLinkTapTempo } = require('./lib/prolink-tap-tempo')
 const { ProLinkObservations } = require('./lib/prolink-observations')
 const os = require('os')
 const {
@@ -46,6 +47,8 @@ class ModuleInstance extends InstanceBase {
 		this._midi = { started: false, restarting: false, backend: 'none', input: null, output: null, lastSent: [] }
 		this._controlGeneration = 0
 		this._prolinkReady = false
+		this._tapTempo = new ProLinkTapTempo()
+		this._tapLastSentBpm = null
 		this._transportOperations = Promise.resolve()
 		this._transportRevision = 0
 		this._prolink = new ProLinkService((state, error) => this._prolinkStateChanged(state, error))
@@ -193,6 +196,7 @@ class ModuleInstance extends InstanceBase {
 		this.updateActions()
 		this.updateFeedbacks()
 		this.updateVariableDefinitions()
+		this._publishProlinkTapState('idle')
 		this.updateStatus(InstanceStatus.Ok)
 		await startHttpServer(this)
 		await this._configureTransport()
@@ -203,6 +207,8 @@ class ModuleInstance extends InstanceBase {
 		this._log('debug', 'destroy start')
 		this.state.sequenceRunning = false
 		this._destroyed = true
+		this._tapTempo.reset()
+		this._tapLastSentBpm = null
 		this._controlGeneration++
 		this._prolinkReady = false
 		this._prolinkObservations?.reset()
@@ -793,6 +799,49 @@ class ModuleInstance extends InstanceBase {
 		return false
 	}
 
+	_publishProlinkTapState(status) {
+		const current = this._tapTempo.snapshot()
+		this.setVariableValues?.({
+			prolink_tap_status: status,
+			prolink_tap_count: current.tapCount,
+			prolink_tap_calculated_bpm: current.calculatedBpm ?? '',
+			prolink_tap_last_sent_bpm: this._tapLastSentBpm ?? '',
+			prolink_tap_last_interval_ms: current.lastIntervalMs ?? '',
+			prolink_tap_average_interval_ms: current.averageIntervalMs ?? '',
+		})
+	}
+
+	_resetProlinkTap(status = 'idle') {
+		this._tapTempo.reset()
+		this._tapLastSentBpm = null
+		this._publishProlinkTapState(status)
+	}
+
+	tapProlinkTempo() {
+		if (this._destroyed || this._transportSwitching || this._transport() !== 'prolink' ||
+			!this._prolinkReady || this._prolink.state !== 'connected') {
+			// An offline tap must not be included in a future measurement sequence.
+			this._resetProlinkTap('disconnected')
+			this._log('debug', '[PROLINK_TAP_TEMPO]', { status: 'disconnected' })
+			return false
+		}
+
+		const tap = this._tapTempo.tap()
+		if (tap.status !== 'ready') {
+			this._publishProlinkTapState(tap.status)
+			this._log('debug', '[PROLINK_TAP_TEMPO]', tap)
+			return tap.status !== 'invalid_interval'
+		}
+
+		// Send every valid tap, even when BPM equals the previous value:
+		// the host resets the musical beat phase on receiving SetTempo.
+		const sent = this._sendProlink('SetTempo', tap.bpm)
+		if (sent) this._tapLastSentBpm = tap.bpm
+		this._publishProlinkTapState(sent ? 'local_sent' : 'send_failed')
+		this._log(sent ? 'debug' : 'warn', '[PROLINK_TAP_TEMPO]', { ...tap, localSend: sent })
+		return sent
+	}
+
 	_sendProlink(command, id) {
 		if (this._destroyed || this._transport() !== 'prolink' || !this._prolinkReady)
 			return this._controlFailure('ProLink is not ready; command was not queued')
@@ -830,6 +879,7 @@ class ModuleInstance extends InstanceBase {
 		}
 		const snapshot = JSON.stringify([transport, transport === 'midi' ? midiConfigSnapshot(this.config) : options])
 		if (snapshot === this._transportConfig && this._prolink.state !== 'fault' && !this._transportSwitching) return
+		this._resetProlinkTap('idle')
 		const revision = ++this._transportRevision
 		this._transportSwitching = true
 		this._prolinkReady = false
@@ -875,6 +925,7 @@ class ModuleInstance extends InstanceBase {
 	_prolinkStateChanged(state, error) {
 		if (this._destroyed) return
 		if (state !== 'connected') {
+			this._resetProlinkTap('disconnected')
 			this._prolinkObservations?.reset()
 			// Force a fresh initial debug snapshot after reconnect.
 			this._lastRackConfig = null
