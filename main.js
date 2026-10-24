@@ -2,6 +2,7 @@ const { InstanceBase, runEntrypoint, InstanceStatus } = require('@companion-modu
 const UpgradeScripts = require('./upgrades')
 const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
+const UpdatePresets = require('./presets')
 const UpdateVariableDefinitions = require('./variables')
 const defaults = require('./default-variables')
 const { startHttpServer, stopHttpServer } = require('./ui/http')
@@ -9,6 +10,7 @@ const { applyMidiStepToVariables } = require('./lib/midi-map')
 const { decodeOsc } = require('./lib/prolink-osc')
 const { ProLinkService } = require('./lib/prolink-service')
 const { ProLinkTapTempo } = require('./lib/prolink-tap-tempo')
+const { ProLinkTapBeat } = require('./lib/prolink-tap-beat')
 const { ProLinkObservations } = require('./lib/prolink-observations')
 const os = require('os')
 const {
@@ -49,6 +51,10 @@ class ModuleInstance extends InstanceBase {
 		this._prolinkReady = false
 		this._tapTempo = new ProLinkTapTempo()
 		this._tapLastSentBpm = null
+		this._tapBeat = new ProLinkTapBeat({ onChange: (active) => {
+			this.setVariableValues?.({ prolink_tap_beat_active: active })
+			this.checkFeedbacks?.('prolink_tap_beat')
+		} })
 		this._transportOperations = Promise.resolve()
 		this._transportRevision = 0
 		this._prolink = new ProLinkService((state, error) => this._prolinkStateChanged(state, error))
@@ -196,6 +202,7 @@ class ModuleInstance extends InstanceBase {
 		this.updateActions()
 		this.updateFeedbacks()
 		this.updateVariableDefinitions()
+		this.updatePresets()
 		this._publishProlinkTapState('idle')
 		this.updateStatus(InstanceStatus.Ok)
 		await startHttpServer(this)
@@ -207,6 +214,7 @@ class ModuleInstance extends InstanceBase {
 		this._log('debug', 'destroy start')
 		this.state.sequenceRunning = false
 		this._destroyed = true
+		this._tapBeat.stop()
 		this._tapTempo.reset()
 		this._tapLastSentBpm = null
 		this._controlGeneration++
@@ -234,6 +242,9 @@ class ModuleInstance extends InstanceBase {
 		} catch {}
 		try {
 			this.updateVariableDefinitions()
+		} catch {}
+		try {
+			this.updatePresets()
 		} catch {}
 		this._log('info', `CONFIG_UPDATED completed`, {
 			logLevel: this.logLevel,
@@ -512,6 +523,14 @@ class ModuleInstance extends InstanceBase {
 			}
 		} catch (e) {
 			this._log('error', 'updateFeedbacks failed', { error: e?.message })
+		}
+	}
+
+	updatePresets() {
+		try {
+			if (typeof UpdatePresets === 'function') UpdatePresets(this)
+		} catch (e) {
+			this._log('error', 'updatePresets failed', { error: e?.message })
 		}
 	}
 
@@ -806,21 +825,23 @@ class ModuleInstance extends InstanceBase {
 			prolink_tap_count: current.tapCount,
 			prolink_tap_calculated_bpm: current.calculatedBpm ?? '',
 			prolink_tap_last_sent_bpm: this._tapLastSentBpm ?? '',
+			prolink_tap_display_bpm: this._tapLastSentBpm ?? '--',
 			prolink_tap_last_interval_ms: current.lastIntervalMs ?? '',
 			prolink_tap_average_interval_ms: current.averageIntervalMs ?? '',
+			prolink_tap_beat_active: this._tapBeat.active,
 		})
 	}
 
 	_resetProlinkTap(status = 'idle') {
 		this._tapTempo.reset()
 		this._tapLastSentBpm = null
+		this._tapBeat.stop()
 		this._publishProlinkTapState(status)
 	}
 
 	tapProlinkTempo() {
 		if (this._destroyed || this._transportSwitching || this._transport() !== 'prolink' ||
 			!this._prolinkReady || this._prolink.state !== 'connected') {
-			// An offline tap must not be included in a future measurement sequence.
 			this._resetProlinkTap('disconnected')
 			this._log('debug', '[PROLINK_TAP_TEMPO]', { status: 'disconnected' })
 			return false
@@ -833,13 +854,20 @@ class ModuleInstance extends InstanceBase {
 			return tap.status !== 'invalid_interval'
 		}
 
-		// Send every valid tap, even when BPM equals the previous value:
-		// the host resets the musical beat phase on receiving SetTempo.
+		// Always send unchanged BPM values: SuperRack reanchors the beat phase.
+		// _sendProlink restarts the local visual beat on a successful local write.
 		const sent = this._sendProlink('SetTempo', tap.bpm)
-		if (sent) this._tapLastSentBpm = tap.bpm
 		this._publishProlinkTapState(sent ? 'local_sent' : 'send_failed')
 		this._log(sent ? 'debug' : 'warn', '[PROLINK_TAP_TEMPO]', { ...tap, localSend: sent })
 		return sent
+	}
+
+	_onProlinkTempoSent(bpm) {
+		// Local transport write only; not a remote ResultCommand acknowledgement.
+		this._tapLastSentBpm = bpm
+		this._tapBeat.start(bpm)
+		this.setVariableValues?.({ prolink_tap_last_sent_bpm: bpm,
+			prolink_tap_display_bpm: bpm })
 	}
 
 	_sendProlink(command, id) {
@@ -848,6 +876,9 @@ class ModuleInstance extends InstanceBase {
 		try {
 			const sequence = this._prolink.send(command, id)
 			this._prolinkObservations.track(command, sequence, id)
+			if (command === 'SetTempo' && Number.isInteger(id) && id >= 40 && id <= 500) {
+				this._onProlinkTempoSent(id)
+			}
 			// Legacy Generic-MIDI triggers watch last_action_timestamp. Keep that pulse MIDI-only.
 			this.setVariableValues({ control_last_error: '', prolink_last_send_timestamp: Date.now() })
 			this._updateVariables()

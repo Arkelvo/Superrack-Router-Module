@@ -7,6 +7,14 @@ module.exports = async function (self) {
 		self._prolinkObservations?.statuses.get(variable) === JSON.stringify(value)
 
 	self.setFeedbackDefinitions({
+		prolink_tap_beat: {
+			name: 'ProLink Tap Tempo – local beat flash (not observed DSP phase)',
+			type: 'boolean',
+			options: [],
+			defaultStyle: { bgcolor: combineRgb(255, 196, 0), color: combineRgb(0, 0, 0) },
+			callback: () => self.config?.controlTransport === 'prolink' &&
+				self._prolink?.state === 'connected' && self._tapBeat?.active === true,
+		},
 		prolink_connected: {
 			name: 'ProLink TCP connected (not execution confirmation)',
 			type: 'boolean', options: [],
