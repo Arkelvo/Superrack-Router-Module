@@ -20,7 +20,7 @@ module.exports = function (self) {
 			feedbacks: [{
 				feedbackId: 'prolink_tap_beat',
 				options: {},
-				style: { bgcolor: combineRgb(255, 196, 0), color: combineRgb(0, 0, 0) },
+				style: { bgcolor: combineRgb(61, 128, 255), color: combineRgb(255, 255, 255) },
 			}],
 		},
 	})

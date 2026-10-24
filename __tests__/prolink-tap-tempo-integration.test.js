@@ -18,7 +18,12 @@ function makeInstance() {
 	self._log = jest.fn()
 	self.setVariableValues = jest.fn((updates) => Object.assign(values, updates))
 	self._updateVariables = jest.fn()
-	self._sendProlink = jest.fn(() => true)
+	self._sendProlink = jest.fn((command, bpm) => {
+		if (command === 'SetTempo') {
+			self._tapLastSentBpm = bpm
+		}
+		return true
+	})
 	self._tapTempo = new ProLinkTapTempo(() => ns)
 	return {
 		self,
