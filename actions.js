@@ -5,7 +5,7 @@ const { createProLinkSnapshotActions } = require('./lib/prolink-snapshot-actions
 const EXTENSION_RANGES = Object.freeze({
 	NavigatePlugin: [0, 1],
 	NavigateRack: [0, 1], // Live verified: 0 = next, 1 = previous.
-	SetTempo: [20, 300], // Conservative UI limit, not a known protocol limit.
+	SetTempo: [40, 500], // Live-verified Waves BPM limits.
 	GetRackName: [0, 63], // Raw provider uiTrackID, not necessarily rack ordinal.
 	GetRacksInfo: [0, 63],
 	GetSnapshotName: [0, 2147483647],
@@ -126,9 +126,14 @@ module.exports = function (self) {
 			options: [], callback: async () => self.runProlinkExtension('ShowPlugin'),
 		},
 		prolink_set_tempo: {
-			name: 'ProLink: Set BPM (does not reset beat phase)',
-			options: [{ id: 'bpm', type: 'number', label: 'BPM', min: 20, max: 300, default: 120 }],
+			name: 'ProLink: Set BPM',
+			options: [{ id: 'bpm', type: 'number', label: 'BPM', min: 40, max: 500, default: 120 }],
 			callback: async (event) => self.runProlinkExtension('SetTempo', event.options.bpm),
+		},
+		prolink_tap_tempo: {
+			name: 'ProLink: Tap Tempo',
+			options: [],
+			callback: async () => self.tapProlinkTempo(),
 		},
 		...Object.fromEntries([
 			['prolink_get_rack_count', 'GetNumRacks', 'Get rack count'],
