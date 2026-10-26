@@ -1,4 +1,6 @@
 const { combineRgb } = require('@companion-module/base')
+const { VERIFIED_SCALES } = require('./lib/prolink-tune-scale-control')
+const { TARGET_CHOICES, parseTarget } = require('./lib/prolink-discrete-control')
 
 module.exports = async function (self) {
 	const observed = (variable, value) =>
@@ -7,6 +9,83 @@ module.exports = async function (self) {
 		self._prolinkObservations?.statuses.get(variable) === JSON.stringify(value)
 
 	self.setFeedbackDefinitions({
+		prolink_discrete_ready: {
+			name: 'V11: recognized focused discrete controller currently observed', type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(0, 110, 65), color: combineRgb(255, 255, 255) },
+			callback: () => self._discreteControl?.connected() === true &&
+				!!(self._discreteControl.current('cla76_analog') || self._discreteControl.current('tune_scale')),
+		},
+		prolink_discrete_profile_focused: {
+			name: 'V12: specific verified discrete profile is currently focused', type: 'boolean',
+			options: [{ id: 'profile', type: 'dropdown', label: 'Verified focused controller',
+				choices: [
+					{ id: 'tune_scale', label: 'Tune RT – Scale Type' },
+					{ id: 'cla76_analog', label: 'CLA-76 – Analog' },
+				], default: 'cla76_analog' }],
+			defaultStyle: { bgcolor: combineRgb(0, 100, 65), color: combineRgb(255, 255, 255) },
+			callback: ({ options }) => self._discreteControl?.connected() === true &&
+				!!self._discreteControl?.current(options.profile),
+		},
+		prolink_discrete_matches: {
+			name: 'V11: focused discrete value observed equal to selected target', type: 'boolean',
+			options: [{ id: 'target', type: 'dropdown', label: 'Verified profile target',
+				choices: TARGET_CHOICES.map(({ id, label }) => ({ id, label })), default: 'cla76_analog:off' }],
+			defaultStyle: { bgcolor: combineRgb(0, 100, 65), color: combineRgb(255, 255, 255) },
+			callback: ({ options }) => {
+				const target = parseTarget(options.target)
+				return !!target && self._discreteControl?.connected() === true &&
+					self._discreteControl?.current(target.profileId)?.item.raw === target.item.raw
+			},
+		},
+		prolink_discrete_busy: {
+			name: 'V11: focused discrete set awaiting readback', type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(180, 95, 0), color: combineRgb(255, 255, 255) },
+			callback: () => !!self._discreteControl?.pending,
+		},
+		prolink_discrete_failure: {
+			name: 'V11: generic discrete set failed or blocked', type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(150, 35, 35), color: combineRgb(255, 255, 255) },
+			callback: () => !!self._discreteControl && !['idle', 'changing', 'already_at_target', 'observed_target'].includes(self._discreteControl.lastStatus),
+		},
+		tune_scale_ready: {
+			name: 'Tune RT Scale Type currently selected and observed', type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(0, 110, 65), color: combineRgb(255, 255, 255) },
+			callback: () => self._tuneScaleControl?.connected() === true && !!self._tuneScaleControl?.current(),
+		},
+		tune_scale_matches: {
+			name: 'Focused Tune RT Scale Type equals selected observed scale', type: 'boolean',
+			options: [{ id: 'scale', type: 'dropdown', label: 'Scale',
+				choices: VERIFIED_SCALES.map(({ id, label }) => ({ id, label })), default: 'major' }],
+			defaultStyle: { bgcolor: combineRgb(0, 95, 70), color: combineRgb(255, 255, 255) },
+			callback: fb => self._tuneScaleControl?.connected() === true &&
+				self._tuneScaleControl?.current()?.item.id === fb.options.scale,
+		},
+		tune_scale_busy: {
+			name: 'Tune scale change is waiting for readback', type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(180, 100, 0), color: combineRgb(255, 255, 255) },
+			callback: () => !!self._tuneScaleControl?.pending,
+		},
+		tune_scale_failure: {
+			name: 'Tune scale action blocked or failed (not a confirmed state)', type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(150, 35, 35), color: combineRgb(255, 255, 255) },
+			callback: () => !!self._tuneScaleControl &&
+				['blocked_scale_focus', 'blocked_pending', 'invalid_target', 'target_label_mismatch',
+					'focus_changed', 'unexpected_readback', 'invalid_readback', 'readback_timeout',
+					'send_failed', 'step_limit', 'other_write_pending', 'command_rejected'].includes(self._tuneScaleControl.lastStatus),
+		},
+		tune_blocked: {
+			name: 'Tune Root/Key control blocked (Scale Type focused control separate)',
+			type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(150, 70, 0), color: combineRgb(255, 255, 255) },
+			callback: () => self._tuneDiagnostics?.connected() === true,
+		},
+		tune_diagnostic_candidate: {
+			name: 'Tune diagnostic: focused label is Scale Root / Scale Type (UNVERIFIED)',
+			type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(40, 60, 115), color: combineRgb(255, 255, 255) },
+			callback: () => self._tuneDiagnostics?.connected() === true &&
+				['root', 'scale'].includes(self._tuneDiagnostics?.focused?.kind),
+		},
 		prolink_tap_beat: {
 			name: 'ProLink Tap Tempo – local beat flash (not observed DSP phase)',
 			type: 'boolean',

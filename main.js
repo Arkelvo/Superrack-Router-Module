@@ -12,6 +12,12 @@ const { ProLinkService } = require('./lib/prolink-service')
 const { ProLinkTapTempo } = require('./lib/prolink-tap-tempo')
 const { ProLinkTapBeat } = require('./lib/prolink-tap-beat')
 const { ProLinkObservations } = require('./lib/prolink-observations')
+const { ProLinkTuneDiagnostics } = require('./lib/prolink-tune-diagnostics')
+const { ProLinkTuneScaleControl } = require('./lib/prolink-tune-scale-control')
+const { ProLinkFocusAudit } = require('./lib/prolink-focus-audit')
+const { ProLinkDiscreteEvidence } = require('./lib/prolink-discrete-evidence')
+const { ProLinkDiscreteControl } = require('./lib/prolink-discrete-control')
+const { blocksCompetingControllerWrite } = require('./lib/prolink-controller-write-lock')
 const os = require('os')
 const {
 	startMidiService,
@@ -59,6 +65,11 @@ class ModuleInstance extends InstanceBase {
 		this._transportRevision = 0
 		this._prolink = new ProLinkService((state, error) => this._prolinkStateChanged(state, error))
 		this._prolinkObservations = new ProLinkObservations(this)
+		this._tuneDiagnostics = new ProLinkTuneDiagnostics(this)
+		this._tuneScaleControl = new ProLinkTuneScaleControl(this)
+		this._focusAudit = new ProLinkFocusAudit(this)
+		this._discreteEvidence = new ProLinkDiscreteEvidence(this)
+		this._discreteControl = new ProLinkDiscreteControl(this)
 		// Handle observations independently from the existing onDebugFrame logger.
 		// Raw/decoded debug logging below remains intact.
 		this._prolink.onFrame = (frame) => this._prolinkObservations.receive(frame)
@@ -203,6 +214,11 @@ class ModuleInstance extends InstanceBase {
 		this.updateFeedbacks()
 		this.updateVariableDefinitions()
 		this.updatePresets()
+		this._tuneDiagnostics.reset()
+		this._tuneScaleControl.reset()
+		this._focusAudit.reset(true)
+		this._discreteEvidence.reset()
+		this._discreteControl.reset()
 		this._publishProlinkTapState('idle')
 		this.updateStatus(InstanceStatus.Ok)
 		await startHttpServer(this)
@@ -220,6 +236,9 @@ class ModuleInstance extends InstanceBase {
 		this._controlGeneration++
 		this._prolinkReady = false
 		this._prolinkObservations?.reset()
+		this._focusAudit?.reset()
+		this._discreteEvidence?.reset()
+		this._discreteControl?.reset()
 		this._transportRevision++
 		this._transportSwitching = true
 		await this._transportOperations
@@ -810,9 +829,9 @@ class ModuleInstance extends InstanceBase {
 		return Number.isInteger(id) && id >= min && id <= max ? id : null
 	}
 
-	_controlFailure(message) {
+	_controlFailure(message, options = {}) {
 		this.state.failedStepsTotal++
-		this._log('warn', message)
+		if (!options?.suppressLog) this._log('warn', message)
 		this.setVariableValues({ control_last_error: message })
 		this._updateVariables()
 		return false
@@ -871,6 +890,12 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	_sendProlink(command, id) {
+		if ((this._tuneScaleControl?.pending || this._discreteControl?.pending) && ['ShowRackByID', 'NavigatePlugin', 'NavigateRack', 'ShowPlugin'].includes(command)) {
+			return this._controlFailure('Focused discrete operation in progress: rack/plugin navigation blocked until readback')
+		}
+		if (blocksCompetingControllerWrite(command, this._tuneScaleControl, this._discreteControl)) {
+			return this._controlFailure('Focused discrete operation in progress: competing controller write blocked')
+		}
 		if (this._destroyed || this._transport() !== 'prolink' || !this._prolinkReady)
 			return this._controlFailure('ProLink is not ready; command was not queued')
 		try {
@@ -955,6 +980,11 @@ class ModuleInstance extends InstanceBase {
 
 	_prolinkStateChanged(state, error) {
 		if (this._destroyed) return
+		if (state === 'connected') {
+			// New TCP peer: never reuse controller samples from an earlier peer.
+			this._tuneDiagnostics?.reset()
+			this._tuneScaleControl?.reset()
+		}
 		if (state !== 'connected') {
 			this._resetProlinkTap('disconnected')
 			this._prolinkObservations?.reset()

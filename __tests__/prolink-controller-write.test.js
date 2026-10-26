@@ -13,6 +13,9 @@ function valuePacket(label, number) {
 function setup() {
   const values = {}
   const self = {
+    config: { controlTransport: 'prolink' },
+    _prolink: { state: 'connected', onState() {} },
+    _prolinkReady: true,
     _log: jest.fn(),
     setVariableValues: jest.fn(v => Object.assign(values,v)),
     checkFeedbacks: jest.fn(), updateActions: jest.fn(),
@@ -109,4 +112,79 @@ test('failed sending does not create awaiting readback state', () => {
   expect(self.changeFocusedProlinkController(1,2)).toBe(false)
   expect(obs.controllerWrite).toBeNull()
   expect(values.prolink_controller_write_status).toBeUndefined()
+})
+
+
+const SCALE_PROPS = ['Scale Type', false, 44, 0, 32, '', 0.001, 0, false, 1,
+  'Tune RT', 'User Scale', 'Asavari (Carnatic)']
+const ANALOG_PROPS = ['Analog', false, 3, 0, 1, '', 0.001, 0, false, 1,
+  'CLA-76', '50Hz', 'Off']
+const SPEED_PROPS = ['Speed', true, 0, 0.1, 800, 'ms', 0.001, 0, false, 1,
+  'Tune RT', '0.1', '800.0']
+
+test.each([
+  [SCALE_PROPS, ['Major', 2], 44],
+  [ANALOG_PROPS, ['60Hz', 2], 3],
+])('live-observed discrete shape %s cannot emit even a +8 command', (properties, value, optionsCandidate) => {
+  const { self, obs, actions, values } = setup()
+  obs.observeControllerProperties(properties)
+  obs.observeControllerValue(value)
+  expect(values.prolink_controller_kind_candidate).toBe('discrete_candidate')
+  expect(values.prolink_controller_discrete_count_candidate).toBe(optionsCandidate)
+  expect(self.changeFocusedProlinkController(1, 8)).toBe(false)
+  expect(values.prolink_controller_write_status).toBe('blocked_discrete')
+  expect(self._sendProlink).not.toHaveBeenCalled()
+  expect(JSON.parse(values.prolink_controller_capability_json).absoluteDiscreteWriteVerified).toBe(false)
+  expect(actions.prolink_controller_inspect).toBeDefined()
+  expect(actions.prolink_controller_inspect.callback).toEqual(expect.any(Function))
+  obs.reset()
+})
+
+test('fresh continuous candidate permits rapid relative steps without falsely confirming each write', () => {
+  const { self, obs, values } = setup()
+  obs.observeControllerProperties(SPEED_PROPS)
+  obs.observeControllerValue(['10.0', 20])
+  expect(values.prolink_controller_kind_candidate).toBe('relative_candidate')
+  expect(self.changeFocusedProlinkController(1, 4)).toBe(true)
+  expect(self.changeFocusedProlinkController(1, 4)).toBe(true)
+  expect(values.prolink_controller_write_status).toBe('awaiting_change')
+  expect(self._sendProlink).toHaveBeenCalledTimes(2)
+  obs.observeControllerValue(['12.0', 22])
+  expect(values.prolink_controller_write_status).toBe('observed_after_send')
+  expect(self.changeFocusedProlinkController(-1, 1)).toBe(true)
+  expect(self._sendProlink).toHaveBeenCalledTimes(3)
+  obs.reset()
+})
+
+test('connection and recency are prerequisites even when continuous selection remains cached', () => {
+  const { self, obs, values } = setup()
+  obs.observeControllerProperties(SPEED_PROPS)
+  obs.observeControllerValue(['10.0', 20])
+  self._prolink.state = 'waiting'
+  expect(self.changeFocusedProlinkController(1, 1)).toBe(false)
+  expect(values.prolink_controller_write_status).toBe('blocked_disconnected')
+  self._prolink.state = 'connected'
+  obs.controllerState.properties.lastSeenAtMs -= 10_000
+  obs.controllerState.value.lastSeenAtMs -= 10_000
+  expect(self.changeFocusedProlinkController(1, 1)).toBe(false)
+  expect(values.prolink_controller_write_status).toBe('blocked_stale')
+  // An identical readback refreshes freshness WITHOUT claiming a value change.
+  obs.observeControllerProperties(SPEED_PROPS)
+  obs.observeControllerValue(['10.0', 20])
+  expect(self.changeFocusedProlinkController(1, 1)).toBe(true)
+  expect(self._sendProlink).toHaveBeenCalledTimes(1)
+  obs.reset()
+})
+
+test('unknown controller properties and changed focus prevent writing', () => {
+  const { self, obs, values } = setup()
+  obs.observeControllerProperties(['Mystery', true, 7, 0, 1, '', .001, 0, false, 1, 'Unknown', '0', '1'])
+  obs.observeControllerValue(['0', 0])
+  expect(self.changeFocusedProlinkController(1, 1)).toBe(false)
+  expect(values.prolink_controller_write_status).toBe('blocked_unknown')
+  obs.observeControllerProperties(SPEED_PROPS)
+  expect(self.changeFocusedProlinkController(1, 1)).toBe(false)
+  expect(values.prolink_controller_write_status).toBe('blocked_missing_data')
+  expect(self._sendProlink).not.toHaveBeenCalled()
+  obs.reset()
 })

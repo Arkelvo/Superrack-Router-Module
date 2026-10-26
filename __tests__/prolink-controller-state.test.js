@@ -95,3 +95,13 @@ test('debug log is emitted only for changes when legacy parser is muted for thes
 	const messages = self._log.mock.calls.map(call => call[1])
 	expect(messages).toEqual(['[PROLINK_CONTROLLER_PROPERTIES_CHANGED]', '[PROLINK_CONTROLLER_VALUE_CHANGED]'])
 })
+
+
+test('value notification preceding first properties must not be paired with new focus', () => {
+  const state = new ProLinkControllerState()
+  expect(state.observeValue(['old field', 42]).changed).toBe(true)
+  const next = state.observeProperties(['Speed', true, 0, 0.1, 800, 'ms', 0.001, 0, false, 1, 'Tune RT', '0.1', '800'])
+  expect(next.changed).toBe(true)
+  expect(state.value).toBeNull()
+  expect(next.values.prolink_controller_known).toBe(false)
+})

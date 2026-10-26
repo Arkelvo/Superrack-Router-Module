@@ -74,3 +74,60 @@ Die angezeigte `prolink_controller_text`-Zeichenfolge stammt vom Plugin;
 Das manuelle Deaktivieren der Subscription kann den Stream abschalten;
 der Auto-Subscription-Status bezieht sich dann weiterhin auf den ursprünglichen
 Initialisierungsrequest und ist keine kontinuierliche Remote-Abfrage.
+
+## Empirischer Vergleich diskreter Controller (2026-10-24)
+
+Zusätzliche reale Companion-/SuperRack-Beobachtungen:
+
+| Ausgewählter Parameter | Properties[1], Properties[2] | `ChangeControllerValue` | Beobachteter Wert |
+|---|---|---|---|
+| Tune RT – Speed | `true, 0` | reagiert | Wertänderung bestätigt |
+| Tune RT – Note Transition | `true, 0` | reagiert | Wertänderung bestätigt |
+| Tune RT – Scale Type | `false, 44` | ResultCommand `succeeded`, **keine Wertänderung** bei +1 oder +8 | `Major` blieb bei Rohwert 2 |
+| CLA-76 – Analog | `false, 3` | ResultCommand `succeeded`, **keine Wertänderung** bei +1 | `60Hz` blieb unverändert |
+
+**Arbeitshypothese:** Feld 1 beschreibt eine relative/andersartige Controllerklasse und Feld 2 könnte bei `false` die Anzahl wählbarer Zustände sein. Weder die Bedeutung der Felder noch ein absolutes Setzkommando sind protokollseitig belegt. Feld 2 ist **keine nachgewiesene Parameteradresse**. Auch `ResultCommand succeeded` ist keine Bestätigung einer Wertänderung.
+
+**Sicherheitsgate ab V4:** `ChangeControllerValue` wird nur bei frisch beobachteten Properties und Value, aktivem ProLink-Transport und dem empirisch funktionierenden Muster `true, 0` freigegeben. Für `false` (diskreter Kandidat), unbekannte Kombinationen, fehlende/veraltete Daten oder getrennte Verbindung wird kein Schreibkommando gesendet. Das bestehende schnelle Senden mehrerer relativer Inkremente an kontinuierliche Controller bleibt möglich. Ein späteres `NotifyControllerValue` ist eine Beobachtung, kein kausaler Wirknachweis für jede einzelne Encoderbewegung.
+
+Die Action `ProLink: Inspect focused controller write capability (read-only)` veröffentlicht `prolink_controller_capability_json`. Darin stehen rohe Felder, der Zustand der Schreibschranke und explizite Flags für nicht verifizierte direkte Parameteradressierung und absolute diskrete Schreibzugriffe. Weitere Variablen: `prolink_controller_kind_candidate`, `prolink_controller_discrete_count_candidate` und `prolink_controller_write_guard_reason`. Die Klassifizierung bleibt heuristisch und absichtlich konservativ. Sie ersetzt keine Live-Verifikation an beliebigen anderen Plugins.
+
+Die ProLink-Kommandoliste im vorhandenen Codec enthält kein nachgewiesenes absolutes Setzen oder Fokussieren diskreter Pluginparameter. Waves beschreibt die reguläre ProLink-Integration als Touch-and-Turn-Steuerung ausgewählter Pluginparameter; daraus folgt keine Garantie einer universellen diskreten Remote-Write-API. Zur Aktivierung direkter Tune-Key-Actions wäre eine dokumentierte oder anderweitig belegte ProLink-Adressierung beziehungsweise ein belegter anderer Controller-Schreibbefehl nötig.
+
+## Experimentelle SwitchControllerValue-Diagnose (V5)
+
+Aus dem vom Nutzer bereitgestellten statischen Reverse-Engineering-Artefakt
+für SuperRack Performer 15.15.12.13 ergibt sich eine OSC-Eingangsregistrierung
+`/waves.com/remote/SwitchControllerValue` mit Typtags `,iT` bzw. `,iF`:
+Request-ID als int32 plus boolesches OSC-Typetag (ohne Payloadbytes).
+Der rekonstruierte Hostpfad schreibt bei `true` für einen geeigneten
+**ausgewählten schaltbaren Controller** einen relativen Schritt `1.0`.
+`false` ist im dokumentierten Zweig ein **No-op**, kein absolutes Setzen auf null.
+Diese Information wurde statisch rekonstruiert; die Wirkung in der laufenden
+SuperRack-Version ist noch nicht live verifiziert.
+
+Die Action **ProLink EXPERIMENT: Switch focused discrete controller (one touch)**
+führt genau einen manuellen Schreibtest aus. Zuvor werden eine laufende ProLink-
+Verbindung, die innerhalb der letzten drei Sekunden empfangenen Properties und
+Value, die bisher beobachtete diskrete Shape sowie Pluginname und Parametername
+geprüft. Zugelassen sind ausschließlich `Tune RT / Scale Type` (`false, 44`)
+und `CLA-76 / Analog` (`false, 3`). Die Action ignoriert `false`, sendet keinen
+Release-Befehl und hat weder eine automatische Wiederholung noch einen
+Regelkreis. Ein offener Schreibversuch oder eine erneute Aktion innerhalb von
+zwei Sekunden wird blockiert. Ein Status `observed_after_send` ist nur eine
+beobachtete Wertänderung, keine kausale Bestätigung des Befehls.
+
+**Sichere Testfolge:** In einer Testsession `Scale Type` manuell auf `Major`
+setzen und fokussieren. Prüfen, dass Companion `Scale Type`, `Tune RT` und
+`Major` meldet. Die Action mit `Tune RT — Scale Type only` genau **einmal**
+ausführen. Sichtbaren Skalentyp, `NotifyControllerValue`,
+`PROLINK_COMMAND_RESULT` und `prolink_controller_write_status` notieren.
+Mit Erfolg allein durch `ResultCommand` darf nicht gerechnet werden.
+Bei ausbleibender Wirkung keine Magnitude-Experimente vornehmen.
+
+Die bisherige Sperre von `ChangeControllerValue` für diskrete Controller
+bleibt vollständig erhalten. Eine freie Rack-/Slot-/Parameteradressierung ist
+auch mit `SwitchControllerValue` nicht nachgewiesen. Interne Funktionen wie
+`SetControllerValue`, `WP_SetControllerValue`,
+`SetControllerValueFromText` stammen aus anderen Bibliotheksschichten und
+sind **keine** dadurch automatisch zugänglichen ProLink-OSC-Kommandos.
