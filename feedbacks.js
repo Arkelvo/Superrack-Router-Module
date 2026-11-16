@@ -98,6 +98,31 @@ module.exports = async function (self) {
 				self._prolink?.state === 'connected' &&
 				self._prolinkObservations?.racks.get(Number(fb.options.rackId))?.known === true,
 		},
+		prolink_snapshot_current_known: {
+			name: 'ProLink current snapshot number known (fresh response)',
+			type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(0, 100, 150), color: combineRgb(255, 255, 255) },
+			callback: () =>
+				self._prolink?.state === 'connected' &&
+				self._prolinkObservations?.snapshots?.currentKnown === true,
+		},
+		prolink_snapshot_list_ready: {
+			name: 'ProLink snapshot list validated (complete live list received)',
+			type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(0, 120, 180), color: combineRgb(255, 255, 255) },
+			callback: () =>
+				self._prolink?.state === 'connected' &&
+				self._prolinkObservations?.snapshots?.listKnown === true &&
+				self._prolinkObservations?.snapshots?.listEntries.length > 0,
+		},
+		prolink_snapshot_edit_pending: {
+			name: 'ProLink snapshot write awaiting ACK',
+			type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(180, 120, 0), color: combineRgb(0, 0, 0) },
+			callback: () =>
+				self._prolink?.state === 'connected' &&
+				self._prolinkObservations?.snapshotMutationInProgress != null,
+		},
 		active_source: {
 			name: 'active source',
 			type: 'boolean', label: 'active source',

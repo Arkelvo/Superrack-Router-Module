@@ -37,6 +37,28 @@ const _startHttpServer = async function (instance) {
 		return getPatchUiState(instance)
 	})
 
+	// Snapshot list from live ProLink observations
+	fastify.get('/patch/snapshots', async (_req, reply) => {
+		reply.header('Cache-Control', 'no-store')
+		const obs = instance._prolinkObservations
+		const snapshots = obs?.snapshots
+		const connected = instance.config?.controlTransport === 'prolink' && instance._prolink?.state === 'connected'
+		if (!connected || !snapshots) {
+			return { transport: 'prolink', connected: false, listKnown: false, currentKnown: false, snapshots: [] }
+		}
+		return {
+			transport: 'prolink',
+			connected: true,
+			listKnown: snapshots.listKnown === true,
+			currentKnown: snapshots.currentKnown === true,
+			currentNumber: snapshots.currentNumber,
+			snapshots: snapshots.listEntries || [],
+			syncStatus: obs.snapshotSyncStatus,
+			lastEditCommand: obs.snapshots.lastEditCommand || '',
+			lastEditStatus: obs.snapshots.lastEditStatus || 'idle',
+		}
+	})
+
 	// Get current mappings from config
 	fastify.get('/patch/mappings', async (_req, reply) => {
 		const maxRacks = parseInt(instance.config?.maxRacks, 10) || instance.rackCount || 64

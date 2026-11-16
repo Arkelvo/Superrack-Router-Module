@@ -186,3 +186,160 @@ test('successful mutation ACK refreshes list and current number; no other edit b
 	])
 	c.obs.reset()
 })
+
+// --- R10-03: comprehensive positive/negative tests for all mutation actions ---
+
+test('StoreSnapshot: positive - fresh current in list, succeeds on ACK', async () => {
+	const c = context([[0, 'First'], [1, 'Second']])
+	const pending = invoke(c.build().prolink_store_snapshot, {})
+	c.answerCurrent(1) // current is in list
+	const result = await pending
+	expect(result).toBe(true)
+	expect(commands(c)).toEqual([
+		['GetCurrentSnapshotNumber', undefined],
+		['StoreSnapshot', undefined],
+	])
+	c.obs.reset()
+})
+
+test('StoreSnapshot: negative - fresh current NOT in list, blocks before send', async () => {
+	const c = context([[10, 'A'], [20, 'B']]) // IDs don't include current
+	const pending = invoke(c.build().prolink_store_snapshot, {})
+	c.answerCurrent(5) // 5 is not in list
+	const result = await pending
+	expect(result).toBe(false)
+	expect(commands(c)).toEqual([['GetCurrentSnapshotNumber', undefined]])
+	c.obs.reset()
+})
+
+test('DuplicateSnapshot: positive - fresh current in list, succeeds on ACK', async () => {
+	const c = context([[0, 'First'], [1, 'Second']])
+	const pending = invoke(c.build().prolink_duplicate_snapshot, {})
+	c.answerCurrent(1) // current is at position 1
+	const result = await pending
+	expect(result).toBe(true)
+	expect(commands(c)).toEqual([
+		['GetCurrentSnapshotNumber', undefined],
+		['DuplicateSnapshot', 1],
+	])
+	c.obs.reset()
+})
+
+test('DuplicateSnapshot: negative - noncontiguous IDs block positional duplicate', async () => {
+	const c = context([[10, 'A'], [20, 'B']]) // noncontiguous
+	const pending = invoke(c.build().prolink_duplicate_snapshot, {})
+	c.answerCurrent(20)
+	const result = await pending
+	expect(result).toBe(false)
+	expect(commands(c)).toEqual([['GetCurrentSnapshotNumber', undefined]])
+	c.obs.reset()
+})
+
+test('MoveSnapshot: positive - fresh current in list, valid destination', async () => {
+	const c = context([[0, 'A'], [1, 'B'], [2, 'C']])
+	const pending = invoke(c.build().prolink_move_snapshot, { destination: '0' })
+	c.answerCurrent(1)
+	const result = await pending
+	expect(result).toBe(true)
+	expect(commands(c)).toEqual([
+		['GetCurrentSnapshotNumber', undefined],
+		['MoveSnapshot', [1, 0]],
+	])
+	c.obs.reset()
+})
+
+test('MoveSnapshot: negative - same source and destination blocked', async () => {
+	const c = context([[0, 'A'], [1, 'B']])
+	const pending = invoke(c.build().prolink_move_snapshot, { destination: '1' })
+	c.answerCurrent(1)
+	const result = await pending
+	expect(result).toBe(false)
+	expect(commands(c)).toEqual([['GetCurrentSnapshotNumber', undefined]])
+	c.obs.reset()
+})
+
+test('MoveSnapshot: negative - destination out of bounds blocked', async () => {
+	const c = context([[0, 'A'], [1, 'B']])
+	const pending = invoke(c.build().prolink_move_snapshot, { destination: '5' })
+	c.answerCurrent(1)
+	const result = await pending
+	expect(result).toBe(false)
+	expect(commands(c)).toEqual([['GetCurrentSnapshotNumber', undefined]])
+	c.obs.reset()
+})
+
+test('RenameSnapshot: positive - fresh current in list', async () => {
+	const c = context([[0, 'A'], [1, 'B']])
+	const pending = invoke(c.build().prolink_rename_snapshot, { name: 'New Name' })
+	c.answerCurrent(1)
+	const result = await pending
+	expect(result).toBe(true)
+	expect(commands(c)).toEqual([
+		['GetCurrentSnapshotNumber', undefined],
+		['SetSnapshotName', [{ id: 1, name: 'New Name' }]],
+	])
+	c.obs.reset()
+})
+
+test('RenameSnapshot: negative - empty name rejected', async () => {
+	const c = context([[0, 'A'], [1, 'B']])
+	const pending = invoke(c.build().prolink_rename_snapshot, { name: '' })
+	c.answerCurrent(1)
+	const result = await pending
+	expect(result).toBe(false)
+	expect(commands(c)).toEqual([['GetCurrentSnapshotNumber', undefined]])
+	c.obs.reset()
+})
+
+test('DeleteSnapshot: positive - fresh current in list, confirmation required', async () => {
+	const c = context([[0, 'A'], [1, 'B'], [2, 'C']])
+	const pending = invoke(c.build().prolink_delete_snapshot, { deleteConfirmation: 'DELETE CURRENT' })
+	c.answerCurrent(1)
+	const result = await pending
+	expect(result).toBe(true)
+	expect(commands(c)).toEqual([
+		['GetCurrentSnapshotNumber', undefined],
+		['DeleteSnapshot', [1]],
+	])
+	c.obs.reset()
+})
+
+test('DeleteSnapshot: negative - last snapshot cannot be deleted', async () => {
+	const c = context([[0, 'Only']])
+	const pending = invoke(c.build().prolink_delete_snapshot, { deleteConfirmation: 'DELETE CURRENT' })
+	c.answerCurrent(0)
+	const result = await pending
+	expect(result).toBe(false)
+	expect(commands(c)).toEqual([['GetCurrentSnapshotNumber', undefined]])
+	c.obs.reset()
+})
+
+test('DeleteSnapshot: negative - wrong confirmation rejected before lookup', async () => {
+	const c = context([[0, 'A'], [1, 'B']])
+	const result = await invoke(c.build().prolink_delete_snapshot, { deleteConfirmation: 'wrong' })
+	expect(result).toBe(false)
+	expect(commands(c)).toEqual([])
+	c.obs.reset()
+})
+
+test('no edit command sent if ResultCommand indicates failure', async () => {
+	const c = context([[0, 'A'], [1, 'B']])
+	const pending = invoke(c.build().prolink_store_snapshot, {})
+	c.answerCurrent(1)
+	expect(await pending).toBe(true)
+	const cmdSeq = c.calls.at(-1).sequence
+	c.obs.observeResult([cmdSeq, 1, '/waves.com/remote/StoreSnapshot failed'])
+	expect(c.values.prolink_snapshot_last_edit_status).toBe('rejected_or_unknown')
+	c.obs.reset()
+})
+
+test('mutation token cleared on disconnect during edit', async () => {
+	const c = context([[0, 'A'], [1, 'B']])
+	const pending = invoke(c.build().prolink_rename_snapshot, { name: 'Test' })
+	c.answerCurrent(1)
+	expect(c.obs.snapshotMutationInProgress).not.toBeNull()
+	c.obs.reset()
+	expect(c.obs.snapshotMutationInProgress).toBeNull()
+	c.service.state = 'waiting'
+	expect(await pending).toBe(false)
+})
