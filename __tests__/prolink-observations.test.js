@@ -127,3 +127,74 @@ test('invalid OSC packets do not mutate state or crash receiver', () => {
 	expect(obs.racks.size).toBe(0)
 	expect(self._log).toHaveBeenCalledWith('warn', '[PROLINK_OSC_INVALID]', expect.any(Object))
 })
+
+function rackInfoPacket(rackIndex, overrides = {}) {
+	const id = rackIndex
+	const name = overrides.name ?? `Rack ${rackIndex + 1}`
+	const muted = overrides.muted ?? false
+	const on = overrides.on ?? true
+	// [id, name, int1, int2, int3, int4, int5, int6, muted, on, int7]
+	// Booleans are encoded in tags, not in data
+	const args = [
+		oscInt(id),
+		oscString(name),
+		oscInt(1), oscInt(2), oscInt(3), oscInt(4), oscInt(5), oscInt(6),
+		oscInt(7)
+	]
+	const tags = `,isiiiiii${muted ? 'T' : 'F'}${on ? 'T' : 'F'}i`
+	return packet(prefix + 'GiveRackInfo', tags, args)
+}
+
+test('GiveRackInfo parses single rack info and updates variables', () => {
+	const { obs, self, values } = observer()
+	// Rack index 6 (rack 7)
+	const frame = rackInfoPacket(6, { name: 'Guitars', muted: true, on: false })
+	obs.receive(frame)
+	expect(values.rack_7_name).toBe('Guitars')
+	expect(values.rack_7_muted).toBe(true)
+	expect(values.rack_7_on).toBe(false)
+	expect(values.rack_7_known).toBe(true)
+	expect(self.setVariableValues).toHaveBeenCalled()
+})
+
+test('GiveRackInfo validates argument count and types', () => {
+	const { obs, self, values } = observer()
+	// Wrong argument count
+	obs.receive(packet(prefix + 'GiveRackInfo', ',i', [oscInt(0)]))
+	expect(values.rack_1_known).toBeUndefined()
+	expect(self._log).toHaveBeenCalledWith('warn', '[PROLINK_RACK_INFO_INVALID]', expect.objectContaining({ count: 1 }))
+	// Wrong types - boolean in data instead of tags
+	obs.receive(packet(prefix + 'GiveRackInfo', ',isiiiiiiii', [
+		oscInt(0), oscString('Test'), oscInt(1), oscInt(2), oscInt(3),
+		oscInt(4), oscInt(5), oscInt(6), oscInt(7)
+	]))
+	expect(values.rack_1_known).toBeUndefined()
+})
+
+test('GiveRackInfo ignores duplicate identical payload', () => {
+	const { obs, self, values } = observer()
+	const frame = rackInfoPacket(6, { name: 'Bass', muted: false, on: true })
+	obs.receive(frame)
+	const before = self.setVariableValues.mock.calls.length
+	obs.receive(frame)
+	expect(self.setVariableValues).toHaveBeenCalledTimes(before)
+})
+
+test('GiveRackInfo updates on change and calls updateActions on rename', () => {
+	const { obs, self, values } = observer()
+	const frame1 = rackInfoPacket(6, { name: 'Drums', muted: false, on: true })
+	obs.receive(frame1)
+	expect(values.rack_7_name).toBe('Drums')
+	expect(values.rack_7_muted).toBe(false)
+	expect(values.rack_7_on).toBe(true)
+	const frame2 = rackInfoPacket(6, { name: 'Drums', muted: true, on: false })
+	obs.receive(frame2)
+	expect(values.rack_7_muted).toBe(true)
+	expect(values.rack_7_on).toBe(false)
+	const afterFrame2 = self.updateActions.mock.calls.length
+	expect(afterFrame2).toBe(1) // only initial call from frame1
+	const frame3 = rackInfoPacket(6, { name: 'Percussion', muted: true, on: false })
+	obs.receive(frame3)
+	expect(values.rack_7_name).toBe('Percussion')
+	expect(self.updateActions).toHaveBeenCalledTimes(2) // frame1 + frame3
+})
