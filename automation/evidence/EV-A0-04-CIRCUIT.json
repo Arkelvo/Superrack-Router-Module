@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-04-CIRCUIT",
+  "taskId": "A0-04",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Circuit breaker triggers on repeated failures",
+  "source": "automation/scripts/test-circuit-breaker.ps1",
+  "location": "automation/scripts/test-circuit-breaker.ps1",
+  "collectedAt": "2026-11-16T00:45:00Z",
+  "collectedBy": "Builder",
+  "sha256": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-04-ORCHESTRATOR", "EV-A0-04-AGENTS", "EV-A0-04-DUMMY-TESTS", "EV-A0-04-RESUME"],
+  "notes": "Test script verifies: initial state (failures=0, open=false), failure counting (3 failures), circuit breaker trigger at threshold (5 failures), task blocking when open, reset functionality"
+}

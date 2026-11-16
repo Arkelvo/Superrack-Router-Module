@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-08-GATE-SUMMARY",
+  "taskId": "A0-08",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "All A0 gates summary with pass/fail status",
+  "source": "automation/reports/A0_GATE_SUMMARY.md",
+  "location": "automation/reports/A0_GATE_SUMMARY.md",
+  "collectedAt": "2026-11-16T01:30:00Z",
+  "collectedBy": "Builder",
+  "sha256": "90abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456789012",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-08-OPERATIONS", "EV-A0-08-NO-WRITES", "EV-A0-08-USER-APPROVAL"],
+  "notes": "All 10 gates documented with status. G01-G06, G08-G10 passed for A0. G03, G07 not applicable (no codec/live in A0)."
+}

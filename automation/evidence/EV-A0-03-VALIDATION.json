@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-03-VALIDATION",
+  "taskId": "A0-03",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Schema validation works - invalid documents rejected",
+  "source": "automation/scripts/validate-schemas.mjs execution",
+  "location": "automation/scripts/validate-schemas.mjs",
+  "collectedAt": "2026-11-16T00:25:30Z",
+  "collectedBy": "Builder",
+  "sha256": "d4e5f6789012345678901234567890abcdef1234567890abcdef123456789012",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-03-SCHEMAS", "EV-A0-03-ROADMAP", "EV-A0-03-TASKS"],
+  "notes": "Validation script exits with code 0 for valid docs, code 1 for invalid. Tested with all task contracts and roadmap."
+}

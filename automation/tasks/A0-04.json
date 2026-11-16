@@ -1,0 +1,61 @@
+{
+  "taskId": "A0-04",
+  "version": "1.0.0",
+  "phase": "A0",
+  "title": "Windows-Orchestrator",
+  "description": "PowerShell Start-Process / Prozessgruppen-Management, getrennte Sessions, Timeouts, Exitcodes, JSON-Protokoll, Wiederanlauf, Circuit Breaker. Gate: 3 Dummy-Tasks plus Abbruch-/Resume-Test erfolgreich.",
+  "allowedPaths": [
+    "automation/scripts/",
+    "automation/agents/"
+  ],
+  "dependencies": ["A0-03"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-A0-04-ORCHESTRATOR",
+      "type": "STATIC_CONFIRMED",
+      "description": "PowerShell orchestrator script created with process management, timeouts, JSON protocol",
+      "source": "automation/scripts/orchestrator.ps1"
+    },
+    {
+      "evidenceId": "EV-A0-04-AGENTS",
+      "type": "STATIC_CONFIRMED",
+      "description": "Agent role prompts/policies created for Planner, Builder, Reviewer, Fixer",
+      "source": "automation/agents/*.md"
+    },
+    {
+      "evidenceId": "EV-A0-04-DUMMY-TESTS",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "3 Dummy tasks executed successfully with proper exit codes and JSON output",
+      "source": "automation/scripts/test-dummy-tasks.ps1 output"
+    },
+    {
+      "evidenceId": "EV-A0-04-RESUME",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Abort/Resume test passes - orchestrator can recover from interruption",
+      "source": "automation/scripts/test-resume.ps1 output"
+    },
+    {
+      "evidenceId": "EV-A0-04-CIRCUIT",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Circuit breaker triggers on repeated failures",
+      "source": "automation/scripts/test-circuit-breaker.ps1 output"
+    }
+  ],
+  "gates": ["G01", "G04", "G06"],
+  "acceptanceCriteria": [
+    "PowerShell orchestrator script manages separate OpenCode sessions per role",
+    "Process groups, timeouts, exit codes properly handled",
+    "JSON protocol for task input/output",
+    "Recovery/restart capability after interruption",
+    "Circuit breaker prevents infinite retry loops",
+    "3 dummy tasks execute and pass",
+    "Abort/resume test passes",
+    "Agent role definitions created"
+  ],
+  "createdAt": "2026-11-16T00:25:30Z",
+  "updatedAt": "2026-11-16T00:25:30Z",
+  "status": "DONE",
+  "assignedRole": "Builder",
+  "attempts": 1,
+  "fixRounds": 0
+}

@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-05-ROLES",
+  "taskId": "A0-05",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "Four roles (Planner, Builder, Reviewer, Fixer) with distinct permissions documented",
+  "source": "automation/agents/*.md, automation/scripts/orchestrator.ps1",
+  "location": "automation/agents/planner.md, builder.md, reviewer.md, fixer.md; automation/scripts/orchestrator.ps1",
+  "collectedAt": "2026-11-16T01:00:00Z",
+  "collectedBy": "Builder",
+  "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-05-GATE-RUNNER", "EV-A0-05-PERMISSION-TESTS", "EV-A0-05-MANIPULATION-TESTS"],
+  "notes": "Each role has distinct responsibilities, constraints, input/output formats. Orchestrator enforces role-based session launch."
+}

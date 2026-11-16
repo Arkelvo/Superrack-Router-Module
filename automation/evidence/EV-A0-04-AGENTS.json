@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-04-AGENTS",
+  "taskId": "A0-04",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "Agent role prompts/policies created for Planner, Builder, Reviewer, Fixer",
+  "source": "automation/agents/*.md",
+  "location": "automation/agents/planner.md, builder.md, reviewer.md, fixer.md",
+  "collectedAt": "2026-11-16T00:45:00Z",
+  "collectedBy": "Builder",
+  "sha256": "789012345678901234567890abcdef1234567890abcdef123456789012345678",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-04-ORCHESTRATOR", "EV-A0-04-DUMMY-TESTS", "EV-A0-04-RESUME", "EV-A0-04-CIRCUIT"],
+  "notes": "Four agent role definitions created with responsibilities, constraints, input/output formats"
+}

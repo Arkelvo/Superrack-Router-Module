@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-05-GATE-RUNNER",
+  "taskId": "A0-05",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "Gate Runner configuration external to agent control",
+  "source": "automation/schemas/gate.schema.json, automation/scripts/gate-runner.ps1",
+  "location": "automation/schemas/gate.schema.json, automation/scripts/gate-runner.ps1",
+  "collectedAt": "2026-11-16T01:00:00Z",
+  "collectedBy": "Builder",
+  "sha256": "bcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-05-ROLES", "EV-A0-05-PERMISSION-TESTS", "EV-A0-05-MANIPULATION-TESTS"],
+  "notes": "Gate definitions in gate.schema.json are external to agent control. Gate runner (gate-runner.ps1) executes gates independently."
+}

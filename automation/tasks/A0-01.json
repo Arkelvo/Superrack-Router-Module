@@ -1,0 +1,53 @@
+{
+  "taskId": "A0-01",
+  "version": "1.0.0",
+  "phase": "A0",
+  "title": "Sicheres Initialisieren auf Disk",
+  "description": "Kontrolliere Git-Repository, Working Tree, Hauptbranch, auf Disk vorhandene Plan-/Startprompt-Dateien, Hashes. Initiale Sicherung / git status / Commit SHA dokumentieren. Lege automation/state/ und automation/reports/ für lokale Runtime-Daten an; große Logs und Geheimnisse per .gitignore ausklammern. Lege unveränderliche Kopie der Plan-Version und einen Startstatus außerhalb agentenbeschreibbarer Gates ab.",
+  "allowedPaths": [
+    "automation/state/",
+    "automation/reports/",
+    "automation/schemas/"
+  ],
+  "dependencies": [],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-A0-01-REPO",
+      "type": "STATIC_CONFIRMED",
+      "description": "Git repository state verified (clean working tree, correct branch, HEAD SHA)",
+      "source": "git status, git rev-parse HEAD"
+    },
+    {
+      "evidenceId": "EV-A0-01-PLAN",
+      "type": "STATIC_CONFIRMED",
+      "description": "Master Plan file exists on disk with correct SHA-256",
+      "source": "File system read + certutil hash"
+    },
+    {
+      "evidenceId": "EV-A0-01-PROMPT",
+      "type": "STATIC_CONFIRMED",
+      "description": "Start Prompt file exists on disk with correct SHA-256",
+      "source": "File system read + certutil hash"
+    },
+    {
+      "evidenceId": "EV-A0-01-BASELINE",
+      "type": "STATIC_CONFIRMED",
+      "description": "INITIAL_BASELINE.md report created with all required fields",
+      "source": "automation/reports/INITIAL_BASELINE.md"
+    }
+  ],
+  "gates": ["G01"],
+  "acceptanceCriteria": [
+    "Git repository verified clean with documented HEAD SHA",
+    "Both plan files exist on local disk with matching SHA-256",
+    "automation/state/ and automation/reports/ directories created",
+    "INITIAL_BASELINE.md written with timestamp, HEAD SHA, plan hashes, environment versions, test baseline",
+    "No secrets in any generated artifacts"
+  ],
+  "createdAt": "2026-11-16T00:18:38Z",
+  "updatedAt": "2026-11-16T00:18:38Z",
+  "status": "DONE",
+  "assignedRole": "Orchestrator",
+  "attempts": 1,
+  "fixRounds": 0
+}

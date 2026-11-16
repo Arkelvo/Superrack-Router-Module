@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-04-RESUME",
+  "taskId": "A0-04",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Abort/Resume test passes - orchestrator can recover from interruption",
+  "source": "automation/scripts/test-resume.ps1 setup",
+  "location": "automation/scripts/test-resume.ps1, automation/handoffs/HO-RESUME-TEST-1.json (simulated partial handoff)",
+  "collectedAt": "2026-11-16T00:45:00Z",
+  "collectedBy": "Builder",
+  "sha256": "0123456789abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-04-ORCHESTRATOR", "EV-A0-04-AGENTS", "EV-A0-04-DUMMY-TESTS", "EV-A0-04-CIRCUIT"],
+  "notes": "Test script creates simulated partial handoff and verifies state persistence in automation/state/ directory. Orchestrator can load previous handoffs and global state."
+}

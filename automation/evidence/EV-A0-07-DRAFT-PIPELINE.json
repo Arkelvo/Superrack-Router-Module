@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-07-DRAFT-PIPELINE",
+  "taskId": "A0-07",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "Complete Draft-first pipeline implemented: prepare, finalize, audit workflows",
+  "source": ".github/workflows/release-prepare.yml, release-finalize.yml, release-audit.yml",
+  "location": ".github/workflows/release-prepare.yml, release-finalize.yml, release-audit.yml",
+  "collectedAt": "2026-11-16T01:20:00Z",
+  "collectedBy": "Builder",
+  "sha256": "4567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-07-VERSION-SYNC", "EV-A0-07-RELEASE-00", "EV-A0-07-IMMUTABLE"],
+  "notes": "Three workflows implement: 1) Prepare (Draft -> PR), 2) Finalize (PR merge -> tag + asset), 3) Audit (published verification)"
+}

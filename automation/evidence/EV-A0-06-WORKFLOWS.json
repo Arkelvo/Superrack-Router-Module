@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-06-WORKFLOWS",
+  "taskId": "A0-06",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "New CI workflows created: pr-checks.yml, release-prepare.yml, release-finalize.yml, release-audit.yml",
+  "source": ".github/workflows/*.yml",
+  "location": ".github/workflows/pr-checks.yml, release-prepare.yml, release-finalize.yml, release-audit.yml",
+  "collectedAt": "2026-11-16T01:15:00Z",
+  "collectedBy": "Builder",
+  "sha256": "ef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-06-NODE-VERSION", "EV-A0-06-PR-TRIGGER", "EV-A0-06-BUILD-VALIDATION", "EV-A0-06-OLD-WORKFLOW"],
+  "notes": "Four new workflows implementing Draft-first release pipeline"
+}

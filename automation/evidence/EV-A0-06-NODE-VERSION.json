@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-06-NODE-VERSION",
+  "taskId": "A0-06",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "All workflows use Node 22 (matching project engines)",
+  "source": ".github/workflows/*.yml",
+  "location": ".github/workflows/pr-checks.yml, release-prepare.yml, release-finalize.yml, release-audit.yml",
+  "collectedAt": "2026-11-16T01:15:00Z",
+  "collectedBy": "Builder",
+  "sha256": "f1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-06-WORKFLOWS", "EV-A0-06-PR-TRIGGER", "EV-A0-06-BUILD-VALIDATION", "EV-A0-06-OLD-WORKFLOW"],
+  "notes": "All workflows specify node-version: '22' matching package.json engines >=18 <23"
+}

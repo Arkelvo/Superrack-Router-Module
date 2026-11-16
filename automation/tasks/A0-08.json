@@ -1,0 +1,52 @@
+{
+  "taskId": "A0-08",
+  "version": "1.0.0",
+  "phase": "A0",
+  "title": "Governance-Abnahme",
+  "description": "Betriebsanleitung Windows und GitHub UI erstellen. Benutzer bestätigt einmalig Infrastruktur-/Berechtigungsänderungen und Gate-/Secret-Verwaltung. A0 RELEASE-GATE: alle A0-Gates grün, keine unkontrollierten GitHub-Writes, keine SuperRack-Writes.",
+  "allowedPaths": [
+    "automation/reports/"
+  ],
+  "dependencies": ["A0-07"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-A0-08-OPERATIONS",
+      "type": "STATIC_CONFIRMED",
+      "description": "Operations manual for Windows and GitHub UI created",
+      "source": "automation/reports/OPERATIONS_MANUAL.md"
+    },
+    {
+      "evidenceId": "EV-A0-08-GATE-SUMMARY",
+      "type": "STATIC_CONFIRMED",
+      "description": "All A0 gates summary with pass/fail status",
+      "source": "automation/reports/A0_GATE_SUMMARY.md"
+    },
+    {
+      "evidenceId": "EV-A0-08-NO-WRITES",
+      "type": "STATIC_CONFIRMED",
+      "description": "No uncontrolled GitHub writes or SuperRack writes performed",
+      "source": "automation/reports/NO_WRITES_CONFIRMATION.md"
+    },
+    {
+      "evidenceId": "EV-A0-08-USER-APPROVAL",
+      "type": "STATIC_CONFIRMED",
+      "description": "User approval documented for infrastructure/permissions",
+      "source": "automation/reports/USER_APPROVAL.md"
+    }
+  ],
+  "gates": ["G08", "G10"],
+  "acceptanceCriteria": [
+    "Operations manual created for Windows orchestration and GitHub UI",
+    "All A0 gates (A0-01 through A0-07) verified green",
+    "No uncontrolled GitHub writes performed during A0",
+    "No SuperRack commands executed during A0",
+    "User approval documented for infrastructure changes",
+    "A0 RELEASE-GATE passed - ready for Phase 0.9.0"
+  ],
+  "createdAt": "2026-11-16T01:20:00Z",
+  "updatedAt": "2026-11-16T01:20:00Z",
+  "status": "DONE",
+  "assignedRole": "Builder",
+  "attempts": 1,
+  "fixRounds": 0
+}

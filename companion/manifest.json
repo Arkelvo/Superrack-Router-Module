@@ -8,8 +8,14 @@
 	"repository": "git+https://github.com/Schaack-Jan/companion-module-waves-superrack-router.git",
 	"bugs": "https://github.com/Schaack-Jan/companion-module-waves-superrack-router/issues",
 	"maintainers": [
-		{ "name": "Jan Schaack", "email": "janschaack.event@gmail.com" },
-		{ "name": "Micha Gehringer", "email": "michagehringer@t-online.de" }
+		{
+			"name": "Jan Schaack",
+			"email": "janschaack.event@gmail.com"
+		},
+		{
+			"name": "Micha Gehringer",
+			"email": "michagehringer@t-online.de"
+		}
 	],
 	"runtime": {
 		"type": "node22",
@@ -24,8 +30,18 @@
 	},
 	"legacyIds": [],
 	"manufacturer": "Waves",
-	"products": ["Superrack Performer", "Superrack SoundGrid"],
-	"keywords": ["waves", "superrack", "routing", "midi", "prolink", "wing"],
+	"products": [
+		"Superrack Performer",
+		"Superrack SoundGrid"
+	],
+	"keywords": [
+		"waves",
+		"superrack",
+		"routing",
+		"midi",
+		"prolink",
+		"wing"
+	],
 	"compatibility": {
 		"minimumCompanionVersion": "4.0.0"
 	}

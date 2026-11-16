@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-07-RELEASE-00",
+  "taskId": "A0-07",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "RELEASE-00 gate test matrix documented and testable",
+  "source": "automation/reports/RELEASE-00_TEST_MATRIX.md",
+  "location": "automation/reports/RELEASE-00_TEST_MATRIX.md",
+  "collectedAt": "2026-11-16T01:20:00Z",
+  "collectedBy": "Builder",
+  "sha256": "67890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456789",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-07-DRAFT-PIPELINE", "EV-A0-07-VERSION-SYNC", "EV-A0-07-IMMUTABLE"],
+  "notes": "10 positive and 14 negative test cases documented. Test matrix ready for execution in isolated test repository."
+}

@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Task Contract",
+  "type": "object",
+  "required": ["taskId", "version", "phase", "title", "description", "allowedPaths", "dependencies", "evidenceRequirements", "gates", "acceptanceCriteria", "createdAt", "status"],
+  "properties": {
+    "taskId": {
+      "type": "string",
+      "pattern": "^[A-Z0-9-]+$",
+      "description": "Unique task identifier (e.g., A0-03, R09-01)"
+    },
+    "version": {
+      "type": "string",
+      "description": "Plan version this task belongs to"
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["A0", "0.9.0", "0.10.0", "0.11.0", "1.0.0", "1.1.x+"],
+      "description": "Release phase this task belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable task title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed task description"
+    },
+    "allowedPaths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Explicit list of file paths the Builder/Fixer may modify. No other paths allowed."
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Task IDs that must be completed (DONE/AUTO_VERIFIED) before this task can start"
+    },
+    "evidenceRequirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["evidenceId", "type", "description"],
+        "properties": {
+          "evidenceId": { "type": "string" },
+          "type": { "type": "string", "enum": ["STATIC_CONFIRMED", "RUNTIME_CONFIRMED", "DOCUMENTED", "INFERRED", "UNPROVEN", "DISPROVEN_IN_SCOPE"] },
+          "description": { "type": "string" },
+          "source": { "type": "string" }
+        }
+      },
+      "description": "Required evidence classes for this task"
+    },
+    "gates": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["G01", "G02", "G03", "G04", "G05", "G06", "G07", "G08", "G09", "G10"] },
+      "description": "Gates that must pass for this task"
+    },
+    "acceptanceCriteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Measurable acceptance criteria"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PENDING", "READY", "IMPLEMENTING", "REVIEWING", "VERIFYING", "AUTO_VERIFIED", "DONE", "AWAITING_LIVE_TEST", "AWAITING_APPROVAL", "BLOCKED", "FAILED"],
+      "description": "Current task state (managed by external runner only)"
+    },
+    "assignedRole": {
+      "type": "string",
+      "enum": ["Planner", "Builder", "Reviewer", "Fixer", "Orchestrator"],
+      "description": "Role currently working on this task"
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of implementation attempts"
+    },
+    "fixRounds": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of fix rounds applied"
+    }
+  },
+  "additionalProperties": false
+}

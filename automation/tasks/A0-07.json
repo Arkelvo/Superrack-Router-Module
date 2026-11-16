@@ -1,0 +1,53 @@
+{
+  "taskId": "A0-07",
+  "version": "1.0.0",
+  "phase": "A0",
+  "title": "GitHub Draft-Release-Pipeline",
+  "description": "Zielprozess gemäß Abschnitt 2 implementieren und gegen isolierte Testressourcen prüfen. Bestehenden release-on-version-change-Workflow erst ersetzen, nachdem die neue Pipeline nachweisbar funktioniert. Gate RELEASE-00 inklusive Test für vorzeitige Veröffentlichung und immutable Assets.",
+  "allowedPaths": [
+    ".github/workflows/",
+    "scripts/"
+  ],
+  "dependencies": ["A0-06"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-A0-07-DRAFT-PIPELINE",
+      "type": "STATIC_CONFIRMED",
+      "description": "Complete Draft-first pipeline implemented: prepare, finalize, audit workflows",
+      "source": ".github/workflows/release-prepare.yml, release-finalize.yml, release-audit.yml"
+    },
+    {
+      "evidenceId": "EV-A0-07-VERSION-SYNC",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "version-sync.mjs works for --write and --check",
+      "source": "scripts/version-sync.mjs"
+    },
+    {
+      "evidenceId": "EV-A0-07-RELEASE-00",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "RELEASE-00 gate test matrix documented and testable",
+      "source": "automation/reports/RELEASE-00_TEST_MATRIX.md"
+    },
+    {
+      "evidenceId": "EV-A0-07-IMMUTABLE",
+      "type": "STATIC_CONFIRMED",
+      "description": "Pipeline handles immutable releases (no force-tag, no asset replacement)",
+      "source": ".github/workflows/release-finalize.yml, release-audit.yml"
+    }
+  ],
+  "gates": ["G01", "G06", "G09"],
+  "acceptanceCriteria": [
+    "Draft-first pipeline fully implemented with 3 workflows",
+    "version-sync script works for write and check",
+    "RELEASE-00 test matrix documented",
+    "Immutable release handling (no force-tag, no asset replacement)",
+    "Old release-on-version-change workflow disabled",
+    "No automated publish - requires manual step"
+  ],
+  "createdAt": "2026-11-16T01:15:00Z",
+  "updatedAt": "2026-11-16T01:15:00Z",
+  "status": "DONE",
+  "assignedRole": "Builder",
+  "attempts": 1,
+  "fixRounds": 0
+}

@@ -1,0 +1,54 @@
+{
+  "taskId": "A0-03",
+  "version": "1.0.0",
+  "phase": "A0",
+  "title": "Task Registry & Schemas",
+  "description": "JSON-Schemas für Task, Evidence, Handoff, Result, Gate, Release. Task-Dependencies und erlaubte Dateipfade überprüfen. Gate: ungültige Dokumente werden deterministisch verworfen.",
+  "allowedPaths": [
+    "automation/schemas/",
+    "automation/tasks/",
+    "automation/roadmap.json"
+  ],
+  "dependencies": ["A0-02"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-A0-03-SCHEMAS",
+      "type": "STATIC_CONFIRMED",
+      "description": "All 6 JSON schemas created and valid: task, evidence, handoff, result, gate, release",
+      "source": "automation/schemas/*.schema.json"
+    },
+    {
+      "evidenceId": "EV-A0-03-ROADMAP",
+      "type": "STATIC_CONFIRMED",
+      "description": "roadmap.json created with all phases, tasks, dependencies, gates, and allowedPaths",
+      "source": "automation/roadmap.json"
+    },
+    {
+      "evidenceId": "EV-A0-03-TASKS",
+      "type": "STATIC_CONFIRMED",
+      "description": "Individual task contracts created for A0-01, A0-02, A0-03 (this task)",
+      "source": "automation/tasks/A0-01.json, A0-02.json, A0-03.json"
+    },
+    {
+      "evidenceId": "EV-A0-03-VALIDATION",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Schema validation works - invalid documents rejected",
+      "source": "Validation test script output"
+    }
+  ],
+  "gates": ["G01", "G02"],
+  "acceptanceCriteria": [
+    "6 JSON schema files created in automation/schemas/",
+    "roadmap.json created with complete phase/task hierarchy",
+    "Task contracts for A0-01, A0-02, A0-03 created",
+    "Schema validation tested and working (invalid docs rejected)",
+    "All schemas reference correct plan version",
+    "Allowed paths correctly scoped per task"
+  ],
+  "createdAt": "2026-11-16T00:18:38Z",
+  "updatedAt": "2026-11-16T00:18:38Z",
+  "status": "DONE",
+  "assignedRole": "Builder",
+  "attempts": 1,
+  "fixRounds": 0
+}

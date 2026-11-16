@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gate Definition",
+  "type": "object",
+  "required": ["gateId", "name", "description", "mandatoryCheck", "failureAction", "runner"],
+  "properties": {
+    "gateId": {
+      "type": "string",
+      "enum": ["G01", "G02", "G03", "G04", "G05", "G06", "G07", "G08", "G09", "G10"],
+      "description": "Gate identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable gate name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed gate description"
+    },
+    "mandatoryCheck": {
+      "type": "string",
+      "description": "Exact verification that must be performed"
+    },
+    "failureAction": {
+      "type": "string",
+      "enum": ["BLOCK_TASK", "REQUIRE_FIX", "AWAIT_APPROVAL", "RELEASE_BLOCKED"],
+      "description": "Action on gate failure"
+    },
+    "runner": {
+      "type": "string",
+      "enum": ["Orchestrator", "GateRunner", "Reviewer", "CI", "LiveTestHost"],
+      "description": "Who/what executes this gate"
+    },
+    "automatable": {
+      "type": "boolean",
+      "description": "Whether this gate can be fully automated"
+    },
+    "timeoutMs": {
+      "type": "integer",
+      "minimum": 1000,
+      "description": "Maximum time allowed for gate execution"
+    }
+  },
+  "additionalProperties": false
+}

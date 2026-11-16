@@ -1,0 +1,53 @@
+{
+  "taskId": "A0-05",
+  "version": "1.0.0",
+  "phase": "A0",
+  "title": "Rollen und Gate Runner",
+  "description": "Vier Rollen und feste Rechte; unabhängiger Review ohne Schreibrechte. Externe Gate-Konfiguration nicht durch Agenten änderbar. Gate: gezielte Manipulations- und Permission-Negativtests erfolgreich.",
+  "allowedPaths": [
+    "automation/scripts/",
+    "automation/agents/",
+    "automation/schemas/gate.schema.json"
+  ],
+  "dependencies": ["A0-04"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-A0-05-ROLES",
+      "type": "STATIC_CONFIRMED",
+      "description": "Four roles (Planner, Builder, Reviewer, Fixer) with distinct permissions documented",
+      "source": "automation/agents/*.md, automation/scripts/orchestrator.ps1"
+    },
+    {
+      "evidenceId": "EV-A0-05-GATE-RUNNER",
+      "type": "STATIC_CONFIRMED",
+      "description": "Gate Runner configuration external to agent control",
+      "source": "automation/schemas/gate.schema.json, automation/scripts/gate-runner.ps1"
+    },
+    {
+      "evidenceId": "EV-A0-05-PERMISSION-TESTS",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Negative tests confirm agents cannot exceed permissions",
+      "source": "automation/scripts/test-permissions.ps1 output"
+    },
+    {
+      "evidenceId": "EV-A0-05-MANIPULATION-TESTS",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Manipulation attempts detected and blocked",
+      "source": "automation/scripts/test-manipulation.ps1 output"
+    }
+  ],
+  "gates": ["G01", "G05"],
+  "acceptanceCriteria": [
+    "Four roles defined with distinct responsibilities and permissions",
+    "Gate Runner configuration external to agent control (in automation/schemas/gate.schema.json)",
+    "Permission negative tests pass - agents cannot write outside allowedPaths",
+    "Manipulation tests pass - attempts to modify gates/schemas blocked",
+    "Reviewer role is read-only, cannot modify application code"
+  ],
+  "createdAt": "2026-11-16T00:45:00Z",
+  "updatedAt": "2026-11-16T00:45:00Z",
+  "status": "DONE",
+  "assignedRole": "Builder",
+  "attempts": 1,
+  "fixRounds": 0
+}

@@ -1,0 +1,97 @@
+name: Prepare Release Draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      draft_tag:
+        description: 'Draft release tag (e.g., 0.9.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  prepare:
+    name: Prepare Release Draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      pr_number: ${{ steps.create-pr.outputs.pr_number }}
+      base_sha: ${{ steps.get-base-sha.outputs.sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get base commit SHA
+        id: get-base-sha
+        run: echo "sha=$(git rev-parse main)" >> $GITHUB_OUTPUT
+
+      - name: Verify draft release exists
+        id: verify-draft
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/{owner}/{repo}/releases
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        # Check if draft with tag exists
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Enable Corepack (Yarn v4)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run version sync
+        run: node scripts/version-sync.mjs --write ${{ github.event.inputs.draft_tag }}
+
+      - name: Verify version sync
+        run: node scripts/version-sync.mjs --check ${{ github.event.inputs.draft_tag }}
+
+      - name: Run tests
+        run: yarn test
+
+      - name: Build package
+        run: yarn package
+
+      - name: Verify package
+        run: |
+          PKG_VERSION=$(node -e "console.log(require('./package.json').version)")
+          MANIFEST_VERSION=$(node -e "console.log(require('./companion/manifest.json').version)")
+          if [ "$PKG_VERSION" != "${{ github.event.inputs.draft_tag }}" ] || [ "$MANIFEST_VERSION" != "${{ github.event.inputs.draft_tag }}" ]; then
+            echo "Version mismatch after sync"
+            exit 1
+          fi
+
+      - name: Create PR
+        id: create-pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ github.token }}
+          branch: release/version-sync/${{ github.event.inputs.draft_tag }}
+          base: main
+          title: "chore: sync version to ${{ github.event.inputs.draft_tag }}"
+          body: |
+            Automated PR to sync version to ${{ github.event.inputs.draft_tag }} for release draft.
+            
+            Changes:
+            - package.json version
+            - companion/manifest.json version
+            
+            This PR must be reviewed and merged before the release draft can be finalized.
+          labels: release, version-sync
+          draft: false
+
+      - name: Output PR info
+        run: |
+          echo "PR created: ${{ steps.create-pr.outputs.pull-request-url }}"
+          echo "PR number: ${{ steps.create-pr.outputs.pull-request-number }}"

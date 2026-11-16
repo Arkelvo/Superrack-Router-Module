@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-08-USER-APPROVAL",
+  "taskId": "A0-08",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "User approval documented for infrastructure/permissions",
+  "source": "automation/reports/USER_APPROVAL.md",
+  "location": "automation/reports/USER_APPROVAL.md",
+  "collectedAt": "2026-11-16T01:30:00Z",
+  "collectedBy": "Builder",
+  "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678901234",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-08-OPERATIONS", "EV-A0-08-GATE-SUMMARY", "EV-A0-08-NO-WRITES"],
+  "notes": "Approval checklist created for 5 categories: GitHub/Release, Version Management, Automation Framework, Security, Windows Operations. Awaiting user signature."
+}

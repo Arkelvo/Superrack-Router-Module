@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-07-IMMUTABLE",
+  "taskId": "A0-07",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "Pipeline handles immutable releases (no force-tag, no asset replacement)",
+  "source": ".github/workflows/release-finalize.yml, release-audit.yml",
+  "location": ".github/workflows/release-finalize.yml, release-audit.yml",
+  "collectedAt": "2026-11-16T01:20:00Z",
+  "collectedBy": "Builder",
+  "sha256": "7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-07-DRAFT-PIPELINE", "EV-A0-07-VERSION-SYNC", "EV-A0-07-RELEASE-00"],
+  "notes": "Finalize workflow checks if tag exists on different SHA and fails hard. Audit workflow verifies tag-SHA, versions, asset hash. No force-push or asset replacement logic."
+}

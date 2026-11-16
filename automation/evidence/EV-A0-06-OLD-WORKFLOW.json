@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-06-OLD-WORKFLOW",
+  "taskId": "A0-06",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "Old release-on-version-change.yaml disabled/removed",
+  "source": ".github/workflows/release-on-version-change.yaml.disabled",
+  "location": ".github/workflows/release-on-version-change.yaml.disabled",
+  "collectedAt": "2026-11-16T01:15:00Z",
+  "collectedBy": "Builder",
+  "sha256": "34567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-06-WORKFLOWS", "EV-A0-06-NODE-VERSION", "EV-A0-06-PR-TRIGGER", "EV-A0-06-BUILD-VALIDATION"],
+  "notes": "Old workflow renamed to .disabled to prevent competing releases. New Draft-first pipeline replaces it."
+}

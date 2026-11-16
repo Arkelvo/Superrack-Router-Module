@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Session Handoff",
+  "type": "object",
+  "required": ["handoffId", "taskId", "planVersion", "sessionRole", "baselineCommit", "resultCommit", "changedFiles", "createdAt", "status", "evidenceIds", "testCommands", "testExitCodes", "reviewerFindings", "risks", "nextAction"],
+  "properties": {
+    "handoffId": {
+      "type": "string",
+      "pattern": "^HO-[A-Z0-9-]+$",
+      "description": "Unique handoff identifier"
+    },
+    "taskId": {
+      "type": "string",
+      "description": "Task this handoff belongs to"
+    },
+    "planVersion": {
+      "type": "string",
+      "description": "Plan version"
+    },
+    "sessionNumber": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Sequential session number for this task"
+    },
+    "sessionRole": {
+      "type": "string",
+      "enum": ["Planner", "Builder", "Reviewer", "Fixer", "Orchestrator"],
+      "description": "Role that produced this handoff"
+    },
+    "baselineCommit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "Git commit SHA at session start"
+    },
+    "resultCommit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "Git commit SHA at session end (or null if no commit)"
+    },
+    "changedFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "reason"],
+        "properties": {
+          "path": { "type": "string" },
+          "reason": { "type": "string" },
+          "linesAdded": { "type": "integer", "minimum": 0 },
+          "linesRemoved": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "description": "Files modified in this session with reasons"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Session duration in milliseconds"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["COMPLETED", "FAILED", "BLOCKED", "AWAITING_REVIEW", "AWAITING_FIX", "AWAITING_LIVE_TEST", "AWAITING_APPROVAL"],
+      "description": "Session outcome"
+    },
+    "evidenceIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Evidence IDs generated/referenced in this session"
+    },
+    "testCommands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["command", "exitCode", "durationMs", "logSha256"],
+        "properties": {
+          "command": { "type": "string" },
+          "exitCode": { "type": "integer" },
+          "durationMs": { "type": "integer", "minimum": 0 },
+          "logSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "passed": { "type": "boolean" }
+        }
+      },
+      "description": "Test commands executed with full results"
+    },
+    "testExitCodes": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "description": "Raw exit codes for quick verification"
+    },
+    "reviewerFindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["findingId", "severity", "description", "reproduction", "status"],
+        "properties": {
+          "findingId": { "type": "string" },
+          "severity": { "type": "string", "enum": ["BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO"] },
+          "description": { "type": "string" },
+          "reproduction": { "type": "string" },
+          "status": { "type": "string", "enum": ["OPEN", "FIXED", "WONT_FIX", "DEFERRED"] },
+          "relatedGate": { "type": "string" }
+        }
+      },
+      "description": "Reviewer findings from this session"
+    },
+    "risks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Identified risks or open questions"
+    },
+    "nextAction": {
+      "type": "string",
+      "enum": ["CONTINUE_IMPLEMENTATION", "START_REVIEW", "START_FIX", "RUN_TESTS", "AWAIT_LIVE_TEST", "AWAIT_APPROVAL", "TASK_COMPLETE", "TASK_FAILED"],
+      "description": "Next permitted action per Orchestrator"
+    },
+    "tokenBudgetUsed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Approximate tokens consumed in this session"
+    },
+    "apiBudgetUsed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "API calls made in this session"
+    }
+  },
+  "additionalProperties": false
+}

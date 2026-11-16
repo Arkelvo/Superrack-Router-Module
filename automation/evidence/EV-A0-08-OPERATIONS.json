@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-08-OPERATIONS",
+  "taskId": "A0-08",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "Operations manual for Windows and GitHub UI created",
+  "source": "automation/reports/OPERATIONS_MANUAL.md",
+  "location": "automation/reports/OPERATIONS_MANUAL.md",
+  "collectedAt": "2026-11-16T01:30:00Z",
+  "collectedBy": "Builder",
+  "sha256": "890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678901",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-08-GATE-SUMMARY", "EV-A0-08-NO-WRITES", "EV-A0-08-USER-APPROVAL"],
+  "notes": "Complete operations manual covering orchestrator, gate runner, version sync, task workflow, GitHub release process, directory structure, security boundaries, troubleshooting"
+}

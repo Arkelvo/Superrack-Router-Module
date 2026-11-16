@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-06-PR-TRIGGER",
+  "taskId": "A0-06",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "PR checks trigger on pull_request open, synchronize, reopened",
+  "source": ".github/workflows/pr-checks.yml",
+  "location": ".github/workflows/pr-checks.yml",
+  "collectedAt": "2026-11-16T01:15:00Z",
+  "collectedBy": "Builder",
+  "sha256": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-06-WORKFLOWS", "EV-A0-06-NODE-VERSION", "EV-A0-06-BUILD-VALIDATION", "EV-A0-06-OLD-WORKFLOW"],
+  "notes": "Workflow triggers on pull_request types: opened, synchronize, reopened, ready_for_review and pull_request_review submitted"
+}

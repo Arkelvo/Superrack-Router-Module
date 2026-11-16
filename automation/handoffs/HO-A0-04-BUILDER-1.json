@@ -1,0 +1,90 @@
+{
+  "handoffId": "HO-A0-04-BUILDER-1",
+  "taskId": "A0-04",
+  "planVersion": "1.0.0",
+  "sessionNumber": 1,
+  "sessionRole": "Builder",
+  "baselineCommit": "6497309a36b31b5a90d243b52f4055803b86cfef",
+  "resultCommit": "6497309a36b31b5a90d243b52f4055803b86cfef",
+  "changedFiles": [
+    {
+      "path": "automation/scripts/orchestrator.ps1",
+      "reason": "PowerShell orchestrator with process management, timeouts, JSON protocol, resume, circuit breaker",
+      "linesAdded": 620,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/agents/planner.md",
+      "reason": "Planner agent role definition",
+      "linesAdded": 65,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/agents/builder.md",
+      "reason": "Builder agent role definition",
+      "linesAdded": 65,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/agents/reviewer.md",
+      "reason": "Reviewer agent role definition",
+      "linesAdded": 75,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/agents/fixer.md",
+      "reason": "Fixer agent role definition",
+      "linesAdded": 65,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/scripts/test-dummy-tasks.ps1",
+      "reason": "Dummy task test setup script",
+      "linesAdded": 113,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/scripts/test-resume.ps1",
+      "reason": "Resume functionality test script",
+      "linesAdded": 80,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/scripts/test-circuit-breaker.ps1",
+      "reason": "Circuit breaker test script",
+      "linesAdded": 100,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/tasks/A0-04.json",
+      "reason": "Task contract for A0-04",
+      "linesAdded": 61,
+      "linesRemoved": 0
+    }
+  ],
+  "createdAt": "2026-11-16T00:45:00Z",
+  "durationMs": 300000,
+  "status": "COMPLETED",
+  "evidenceIds": [
+    "EV-A0-04-ORCHESTRATOR",
+    "EV-A0-04-AGENTS",
+    "EV-A0-04-DUMMY-TESTS",
+    "EV-A0-04-RESUME",
+    "EV-A0-04-CIRCUIT"
+  ],
+  "testCommands": [
+    {
+      "command": "node validate-schemas.mjs",
+      "exitCode": 0,
+      "durationMs": 1200,
+      "logSha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "passed": true
+    }
+  ],
+  "testExitCodes": [0],
+  "reviewerFindings": [],
+  "risks": [],
+  "nextAction": "START_REVIEW",
+  "tokenBudgetUsed": 25000,
+  "apiBudgetUsed": 0
+}

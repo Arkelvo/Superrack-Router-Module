@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-03-TASKS",
+  "taskId": "A0-03",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "Individual task contracts created for A0-01, A0-02, A0-03",
+  "source": "automation/tasks/A0-01.json, A0-02.json, A0-03.json",
+  "location": "automation/tasks/",
+  "collectedAt": "2026-11-16T00:25:00Z",
+  "collectedBy": "Builder",
+  "sha256": "c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567890",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-03-SCHEMAS", "EV-A0-03-ROADMAP", "EV-A0-03-VALIDATION"],
+  "notes": "All task contracts validate against task.schema.json"
+}

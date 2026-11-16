@@ -1,0 +1,340 @@
+{
+  "planId": "PL-AUTO-2026-11-15",
+  "planVersion": "1.0.0",
+  "createdAt": "2026-11-15T00:00:00Z",
+  "targetRepository": "Arkelvo/Superrack-Router-Module",
+  "phases": [
+    {
+      "phaseId": "A0",
+      "name": "Automation Foundation",
+      "targetVersion": "0.8.3",
+      "description": "Establish automation infrastructure, CI hardening, and Draft-first release pipeline",
+      "tasks": [
+        {
+          "taskId": "A0-01",
+          "title": "Sicheres Initialisieren auf Disk",
+          "status": "DONE",
+          "dependencies": [],
+          "gates": ["G01"],
+          "allowedPaths": ["automation/state/", "automation/reports/", "automation/schemas/"]
+        },
+        {
+          "taskId": "A0-02",
+          "title": "Baseline & CI-Audit",
+          "status": "DONE",
+          "dependencies": ["A0-01"],
+          "gates": ["G01", "G06"],
+          "allowedPaths": ["automation/reports/"]
+        },
+        {
+          "taskId": "A0-03",
+          "title": "Task Registry & Schemas",
+          "status": "IMPLEMENTING",
+          "dependencies": ["A0-02"],
+          "gates": ["G01", "G02"],
+          "allowedPaths": ["automation/schemas/", "automation/tasks/", "automation/roadmap.json"]
+        },
+        {
+          "taskId": "A0-04",
+          "title": "Windows-Orchestrator",
+          "status": "PENDING",
+          "dependencies": ["A0-03"],
+          "gates": ["G01", "G04", "G06"],
+          "allowedPaths": ["automation/scripts/", "automation/agents/"]
+        },
+        {
+          "taskId": "A0-05",
+          "title": "Rollen und Gate Runner",
+          "status": "PENDING",
+          "dependencies": ["A0-04"],
+          "gates": ["G01", "G05"],
+          "allowedPaths": ["automation/scripts/", "automation/agents/", "automation/schemas/gate.schema.json"]
+        },
+        {
+          "taskId": "A0-06",
+          "title": "CI härten",
+          "status": "PENDING",
+          "dependencies": ["A0-03"],
+          "gates": ["G01", "G04", "G06"],
+          "allowedPaths": [".github/workflows/"]
+        },
+        {
+          "taskId": "A0-07",
+          "title": "GitHub Draft-Release-Pipeline",
+          "status": "PENDING",
+          "dependencies": ["A0-06"],
+          "gates": ["G01", "G06", "G09"],
+          "allowedPaths": [".github/workflows/", "scripts/"]
+        },
+        {
+          "taskId": "A0-08",
+          "title": "Governance-Abnahme",
+          "status": "PENDING",
+          "dependencies": ["A0-07"],
+          "gates": ["G08", "G10"],
+          "allowedPaths": ["automation/reports/"]
+        }
+      ]
+    },
+    {
+      "phaseId": "0.9.0",
+      "name": "Plugin Control Foundation",
+      "targetVersion": "0.9.0",
+      "description": "Implement Plugin Control with SwitchControllerValue based on live wire captures",
+      "tasks": [
+        {
+          "taskId": "R09-01",
+          "title": "Codec: SwitchControllerValue Implementation",
+          "status": "PENDING",
+          "dependencies": ["A0-08"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["lib/prolink-codec.js", "__tests__/prolink-codec.test.js", "docs/PROLINK*.md"]
+        },
+        {
+          "taskId": "R09-02",
+          "title": "Actions: Discrete Steps with Focus Guard",
+          "status": "PENDING",
+          "dependencies": ["R09-01"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["actions.js", "__tests__/prolink-controller-write.test.js"]
+        },
+        {
+          "taskId": "R09-03",
+          "title": "Zustandsmodell: Continuous/Discrete Properties",
+          "status": "PENDING",
+          "dependencies": ["R09-01"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["lib/prolink-controller-state.js", "__tests__/prolink-controller-state.test.js"]
+        },
+        {
+          "taskId": "R09-04",
+          "title": "Presets: Generic + Tune RT/CLA-76",
+          "status": "PENDING",
+          "dependencies": ["R09-02", "R09-03"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["presets.js", "actions.js", "feedbacks.js", "variables.js", "__tests__/prolink-tap-preset.test.js"]
+        },
+        {
+          "taskId": "R09-05",
+          "title": "Automatische Regression",
+          "status": "PENDING",
+          "dependencies": ["R09-04"],
+          "gates": ["G01", "G04", "G05", "G06"],
+          "allowedPaths": ["__tests__/"]
+        },
+        {
+          "taskId": "R09-06",
+          "title": "Live-Akzeptanz",
+          "status": "PENDING",
+          "dependencies": ["R09-05"],
+          "gates": ["G07", "G08"],
+          "allowedPaths": ["automation/evidence/", "automation/reports/"]
+        }
+      ]
+    },
+    {
+      "phaseId": "0.10.0",
+      "name": "Rack & Snapshot Management",
+      "targetVersion": "0.10.0",
+      "description": "Rack status, live names, snapshot list, mutations with live confirmation gates",
+      "tasks": [
+        {
+          "taskId": "R10-01",
+          "title": "Rackstatus and Live Names",
+          "status": "PENDING",
+          "dependencies": ["R09-06"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["lib/prolink-snapshots.js", "lib/prolink-observations.js", "__tests__/"]
+        },
+        {
+          "taskId": "R10-02",
+          "title": "Rack Dashboard and Dynamic Presets",
+          "status": "PENDING",
+          "dependencies": ["R10-01"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["ui/public/", "actions.js", "feedbacks.js", "__tests__/"]
+        },
+        {
+          "taskId": "R10-03",
+          "title": "Snapshot List and Current Snapshot",
+          "status": "PENDING",
+          "dependencies": ["R10-01"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["lib/prolink-snapshots.js", "__tests__/prolink-snapshots.test.js"]
+        },
+        {
+          "taskId": "R10-04",
+          "title": "Store/Duplicate/Move/Rename/Delete Actions",
+          "status": "PENDING",
+          "dependencies": ["R10-03"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07", "G08"],
+          "allowedPaths": ["actions.js", "lib/prolink-snapshot-actions.js", "__tests__/prolink-snapshot-mutations.test.js"]
+        },
+        {
+          "taskId": "R10-05",
+          "title": "CPU/Session/Audio Monitoring",
+          "status": "PENDING",
+          "dependencies": ["R10-01"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["lib/prolink-monitoring.js", "__tests__/prolink-monitoring.test.js"]
+        }
+      ]
+    },
+    {
+      "phaseId": "0.11.0",
+      "name": "Live Workflow Integration",
+      "targetVersion": "0.11.0",
+      "description": "Independent adapters, tempo sync, rack follow, profiles, reconnect handling",
+      "tasks": [
+        {
+          "taskId": "R11-01",
+          "title": "Independent Adapters (WING first)",
+          "status": "PENDING",
+          "dependencies": ["R10-05"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["lib/", "ui/public/", "__tests__/"]
+        },
+        {
+          "taskId": "R11-02",
+          "title": "Event-driven Tempo Synchronization",
+          "status": "PENDING",
+          "dependencies": ["R10-05"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["lib/prolink-tap-tempo.js", "__tests__/prolink-tap-tempo*.test.js"]
+        },
+        {
+          "taskId": "R11-03",
+          "title": "Rack Follow and Console Scene Mapping",
+          "status": "PENDING",
+          "dependencies": ["R11-01"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07", "G08"],
+          "allowedPaths": ["actions.js", "lib/", "__tests__/"]
+        },
+        {
+          "taskId": "R11-04",
+          "title": "Profiles for Proven Controllers",
+          "status": "PENDING",
+          "dependencies": ["R11-01"],
+          "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07", "G08"],
+          "allowedPaths": ["presets.js", "lib/", "__tests__/"]
+        },
+        {
+          "taskId": "R11-05",
+          "title": "Reconnect, Timeout, Backpressure, Long-run Tests",
+          "status": "PENDING",
+          "dependencies": ["R11-01"],
+          "gates": ["G01", "G04", "G05", "G06"],
+          "allowedPaths": ["lib/", "__tests__/"]
+        }
+      ]
+    },
+    {
+      "phaseId": "1.0.0",
+      "name": "Production Hardening",
+      "targetVersion": "1.0.0",
+      "description": "Full regression, Windows/Companion installation tests, documentation, security review",
+      "tasks": [
+        {
+          "taskId": "R100-01",
+          "title": "Cross-release Regression and Stability",
+          "status": "PENDING",
+          "dependencies": ["R11-05"],
+          "gates": ["G01", "G04", "G05", "G06"],
+          "allowedPaths": ["__tests__/", "automation/scripts/"]
+        },
+        {
+          "taskId": "R100-02",
+          "title": "Windows/Companion Installation Tests",
+          "status": "PENDING",
+          "dependencies": ["R11-05"],
+          "gates": ["G01", "G04", "G05", "G06", "G07"],
+          "allowedPaths": ["automation/scripts/", "automation/evidence/"]
+        },
+        {
+          "taskId": "R100-03",
+          "title": "Documentation and Troubleshooting",
+          "status": "PENDING",
+          "dependencies": ["R11-05"],
+          "gates": ["G01", "G10"],
+          "allowedPaths": ["docs/", "README.md", "CHANGELOG.md", "companion/HELP.md"]
+        },
+        {
+          "taskId": "R100-04",
+          "title": "Security Review and Attestation",
+          "status": "PENDING",
+          "dependencies": ["R11-05"],
+          "gates": ["G01", "G08", "G10"],
+          "allowedPaths": ["automation/reports/", "package.json", ".github/workflows/"]
+        },
+        {
+          "taskId": "R100-05",
+          "title": "User Acceptance and Release",
+          "status": "PENDING",
+          "dependencies": ["R100-04"],
+          "gates": ["G08", "G09", "G10"],
+          "allowedPaths": ["automation/reports/"]
+        }
+      ]
+    },
+    {
+      "phaseId": "1.1.x+",
+      "name": "Conditional Research Extensions",
+      "targetVersion": "1.1.0+",
+      "description": "Research-backed extensions only after evidence classification",
+      "tasks": [
+        {
+          "taskId": "F01",
+          "title": "Session Load/Save Research",
+          "status": "PENDING",
+          "dependencies": ["R100-05"],
+          "gates": ["G02", "G03"],
+          "allowedPaths": ["automation/evidence/", "automation/reports/"]
+        },
+        {
+          "taskId": "F02",
+          "title": "UI Lock/Unlock Research",
+          "status": "PENDING",
+          "dependencies": ["R100-05"],
+          "gates": ["G02", "G03"],
+          "allowedPaths": ["automation/evidence/", "automation/reports/"]
+        },
+        {
+          "taskId": "F03",
+          "title": "Rack-Mute/Plugin-Bypass Research",
+          "status": "PENDING",
+          "dependencies": ["R100-05"],
+          "gates": ["G02", "G03"],
+          "allowedPaths": ["automation/evidence/", "automation/reports/"]
+        },
+        {
+          "taskId": "F04",
+          "title": "Focus-independent Plugin Parameters Research",
+          "status": "PENDING",
+          "dependencies": ["R100-05"],
+          "gates": ["G02", "G03"],
+          "allowedPaths": ["automation/evidence/", "automation/reports/"]
+        },
+        {
+          "taskId": "F05",
+          "title": "Additional Getters/Notifications Research",
+          "status": "PENDING",
+          "dependencies": ["R100-05"],
+          "gates": ["G02", "G03"],
+          "allowedPaths": ["automation/evidence/", "automation/reports/"]
+        }
+      ]
+    }
+  ],
+  "gates": {
+    "G01": { "id": "G01", "name": "Task Contract & Allowed Paths", "runner": "Orchestrator" },
+    "G02": { "id": "G02", "name": "Evidence IDs Reference Real Sources", "runner": "Reviewer" },
+    "G03": { "id": "G03", "name": "Codec/API Schema Strict", "runner": "Reviewer" },
+    "G04": { "id": "G04", "name": "Tests Including Negative/Timeout/Disconnect/Focus", "runner": "GateRunner" },
+    "G05": { "id": "G05", "name": "Independent Read-only Review", "runner": "Reviewer" },
+    "G06": { "id": "G06", "name": "Package Build & Content", "runner": "GateRunner" },
+    "G07": { "id": "G07", "name": "Live Readback Only with Approved Test Profile", "runner": "LiveTestHost" },
+    "G08": { "id": "G08", "name": "No Main Merge/Tag Push/Release Publish by AI", "runner": "Orchestrator" },
+    "G09": { "id": "G09", "name": "Release Tag, Versions, Build Commit, Asset Hash", "runner": "GateRunner" },
+    "G10": { "id": "G10", "name": "Rollback & Documented Changes", "runner": "Orchestrator" }
+  }
+}

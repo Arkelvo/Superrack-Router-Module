@@ -1,0 +1,58 @@
+{
+  "taskId": "A0-02",
+  "version": "1.0.0",
+  "phase": "A0",
+  "title": "Baseline & CI-Audit",
+  "description": "Versionskonflikt package.json 0.8.2 gegen Manifest 0.7.1 erfassen, Node/Companion-Kompatibilität und GitHub-Workflows prüfen. npm test/yarn test, yarn package, Format/Package-Validierung als Ausgangswert aufnehmen. Noch keine Versionsänderung im Anwendungscode.",
+  "allowedPaths": [
+    "automation/reports/"
+  ],
+  "dependencies": ["A0-01"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-A0-02-VERSIONS",
+      "type": "STATIC_CONFIRMED",
+      "description": "Version mismatch documented: package.json 0.8.2 vs manifest.json 0.7.1",
+      "source": "package.json, companion/manifest.json"
+    },
+    {
+      "evidenceId": "EV-A0-02-TESTS",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "All 228 tests pass at baseline (32 suites, 0 failures)",
+      "source": "yarn test output"
+    },
+    {
+      "evidenceId": "EV-A0-02-BUILD",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Package build successful, produces waves-superrack-router-0.8.2.tgz",
+      "source": "yarn package output"
+    },
+    {
+      "evidenceId": "EV-A0-02-WORKFLOWS",
+      "type": "STATIC_CONFIRMED",
+      "description": "Existing GitHub workflows analyzed: release-on-version-change.yaml uses Node 24 (conflict), pr-unit-test.yaml triggers only on review events",
+      "source": ".github/workflows/*.yaml"
+    },
+    {
+      "evidenceId": "EV-A0-02-NODE",
+      "type": "STATIC_CONFIRMED",
+      "description": "Project declares node >=18 <23 but CI uses Node 24",
+      "source": "package.json engines, .github/workflows/release-on-version-change.yaml"
+    }
+  ],
+  "gates": ["G01", "G06"],
+  "acceptanceCriteria": [
+    "Version mismatch documented in baseline report",
+    "All tests pass (228/228)",
+    "Package builds successfully",
+    "CI workflow issues identified and documented",
+    "Node version conflict documented",
+    "No application code changes made"
+  ],
+  "createdAt": "2026-11-16T00:18:38Z",
+  "updatedAt": "2026-11-16T00:18:38Z",
+  "status": "DONE",
+  "assignedRole": "Orchestrator",
+  "attempts": 1,
+  "fixRounds": 0
+}

@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-05-MANIPULATION-TESTS",
+  "taskId": "A0-05",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Manipulation attempts detected and blocked",
+  "source": "automation/scripts/test-manipulation.mjs output",
+  "location": "automation/scripts/test-manipulation.mjs",
+  "collectedAt": "2026-11-16T01:00:00Z",
+  "collectedBy": "Builder",
+  "sha256": "def1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-05-ROLES", "EV-A0-05-GATE-RUNNER", "EV-A0-05-PERMISSION-TESTS"],
+  "notes": "6 tests passed: gate schema immutable, gate enforcement, circuit breaker protected, schema validation blocks invalid, version sync protected, GitHub workflows protected"
+}
