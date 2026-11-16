@@ -89,6 +89,15 @@ module.exports = async function (self) {
 				self._prolink?.state === 'connected' &&
 				self._prolinkObservations?.racks.get(Number(fb.options.rackId))?.on === true,
 		},
+		prolink_rack_known: {
+			name: 'SuperRack rack status known (observed, not stale)',
+			type: 'boolean',
+			options: [{ id: 'rackId', type: 'number', label: 'Rack (1–64)', min: 1, max: 64, default: 1 }],
+			defaultStyle: { bgcolor: combineRgb(0, 80, 120), color: combineRgb(255, 255, 255) },
+			callback: (fb) =>
+				self._prolink?.state === 'connected' &&
+				self._prolinkObservations?.racks.get(Number(fb.options.rackId))?.known === true,
+		},
 		active_source: {
 			name: 'active source',
 			type: 'boolean', label: 'active source',

@@ -10,7 +10,7 @@ const tick = () => new Promise((resolve) => setImmediate(resolve))
 
 test('browser updates rack labels in place, reverts on disconnect and transport switch', async () => {
 	// First poll begins immediately, so the first fetch response is held by a controllable promise.
-	const labels = Array.from({ length: 3 }, (_x, i) => ({ textContent: `Rack ${i + 1}`, title: '' }))
+	const labels = Array.from({ length: 3 }, (_x, i) => ({ textContent: `Rack ${i + 1}`, title: '', classList: { _set: new Set(), remove: jest.fn(), add: jest.fn(), contains: jest.fn() } }))
 	const links = Array.from({ length: 2 }, () => ({ hidden: true, style: { display: 'none' } }))
 	const cycles = []
 	const scheduled = []
@@ -23,7 +23,10 @@ test('browser updates rack labels in place, reverts on disconnect and transport 
 	expect(fetch).toHaveBeenCalledTimes(1)
 	cycles.shift().resolve({ ok: true, json: async () => ({
 		transport: 'prolink', prolinkConnected: true,
-		racks: [{ id: 1, name: 'Voc Hannah', observed: true }, { id: 2, name: '<script>alert(1)</script>', observed: true }],
+		racks: [
+			{ id: 1, name: 'Voc Hannah', observed: true, muted: false, on: false },
+			{ id: 2, name: '<script>alert(1)</script>', observed: true, muted: false, on: false }
+		],
 	}) })
 	await tick()
 	expect(labels.map((v) => v.textContent)).toEqual(['Voc Hannah', '<script>alert(1)</script>', 'Rack 3'])

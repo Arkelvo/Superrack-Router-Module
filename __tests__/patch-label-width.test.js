@@ -7,12 +7,15 @@ const html = fs.readFileSync(path.join(__dirname, '../ui/public/rack-channel.htm
 const css = fs.readFileSync(path.join(__dirname, '../ui/public/patch-grid.css'), 'utf8')
 
 test('patch label column is shared max-content and tracks live names without clipping', async () => {
-	const labels = [{ textContent: 'Rack 1' }, { textContent: 'Rack 2' }]
+	const labels = [
+		{ textContent: 'Rack 1', classList: { _set: new Set(), remove: jest.fn(), add: jest.fn(), contains: jest.fn() } },
+		{ textContent: 'Rack 2', classList: { _set: new Set(), remove: jest.fn(), add: jest.fn(), contains: jest.fn() } }
+	]
 	const table = { style: { gridTemplateColumns: '100px repeat(64, 30px)' } }
 	let observe = null
 	const matrix = { querySelector: () => table, querySelectorAll: () => labels }
 	const tasks = []
-	let next = { transport: 'prolink', prolinkConnected: true, racks: [{ id: 1, name: 'Very Long Vocal Name — ÄÖÜ 🎤', observed: true }] }
+	let next = { transport: 'prolink', prolinkConnected: true, racks: [{ id: 1, name: 'Very Long Vocal Name — ÄÖÜ 🎤', observed: true, muted: false, on: false }] }
 	const context = {
 		document: { getElementById: () => matrix, querySelectorAll: () => [] },
 		MutationObserver: class { observe(_target, options) { observe = options } },

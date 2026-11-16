@@ -38,11 +38,16 @@
 		if (!rackMatrix) return
 		const connected = prolink && state.prolinkConnected === true
 		const knownNames = new Map()
+		const knownMuted = new Map()
+		const knownOn = new Map()
 		if (connected && Array.isArray(state.racks)) {
 			for (const entry of state.racks) {
-				if (Number.isInteger(entry.id) && entry.id >= 1 && entry.observed === true &&
-					typeof entry.name === 'string' && entry.name.trim()) {
-					knownNames.set(entry.id, entry.name)
+				if (Number.isInteger(entry.id) && entry.id >= 1) {
+					if (entry.observed === true && typeof entry.name === 'string' && entry.name.trim()) {
+						knownNames.set(entry.id, entry.name)
+					}
+					if (entry.muted === true) knownMuted.set(entry.id, true)
+					if (entry.on === true) knownOn.set(entry.id, true)
 				}
 			}
 		}
@@ -53,6 +58,12 @@
 			const text = knownNames.get(id) || `Rack ${id}`
 			if (label.textContent !== text) label.textContent = text
 			label.title = text
+			// Add status classes for muted/on indicators
+			if (label.classList) {
+				label.classList.remove('rack-muted', 'rack-on')
+				if (knownMuted.has(id)) label.classList.add('rack-muted')
+				if (knownOn.has(id)) label.classList.add('rack-on')
+			}
 		})
 	}
 

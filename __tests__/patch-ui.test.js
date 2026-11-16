@@ -31,9 +31,9 @@ describe('Patch UI observed rack names and transport behavior', () => {
 		const self = mockInstance()
 		const live = getPatchUiState(self)
 		expect(live).toMatchObject({ transport: 'prolink', prolinkConnected: true })
-		expect(live.racks[0]).toEqual({ id: 1, name: 'Voc Hannah', observed: true })
+		expect(live.racks[0]).toEqual({ id: 1, name: 'Voc Hannah', observed: true, muted: false, on: false })
 		expect(live.racks[1].name).toBe('Keys')
-		expect(live.racks[2]).toEqual({ id: 3, name: 'Rack 3', observed: false })
+		expect(live.racks[2]).toEqual({ id: 3, name: 'Rack 3', observed: false, muted: false, on: false })
 		expect(live.racks).toHaveLength(64)
 		self._prolink.state = 'waiting'
 		expect(getPatchUiState(self).racks[0].name).toBe('Rack 1')

@@ -4,4 +4,30 @@
 #patch-matrix-container .patch-y-label {
   white-space: nowrap;
   overflow: visible;
+  position: relative;
+  padding-right: 24px; /* Space for status indicators */
+}
+
+/* Rack status indicators in the label */
+#patch-matrix-container .patch-y-label.rack-muted::after {
+  content: ' 🔇';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8em;
+}
+
+#patch-matrix-container .patch-y-label.rack-on::after {
+  content: ' 🟢';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8em;
+}
+
+#patch-matrix-container .patch-y-label.rack-muted.rack-on::after {
+  content: ' 🔇🟢';
+  right: 4px;
 }
