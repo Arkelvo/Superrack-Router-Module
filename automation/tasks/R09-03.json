@@ -1,0 +1,42 @@
+{
+  "taskId": "R09-03",
+  "version": "1.0.0",
+  "phase": "0.9.0",
+  "title": "Zustandsmodell: Continuous/Discrete Properties",
+  "description": "Enhance ProLinkControllerState to distinguish continuous vs discrete controller properties. Add explicit property type classification (continuous range vs discrete on/off) based on observed properties fields. Evidence class: RUNTIME_CONFIRMED.",
+  "allowedPaths": [
+    "lib/prolink-controller-state.js",
+    "__tests__/prolink-controller-state.test.js"
+  ],
+  "dependencies": ["R09-01"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-R09-03-STATE",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Enhanced controller state model with continuous/discrete property classification",
+      "source": "lib/prolink-controller-state.js"
+    },
+    {
+      "evidenceId": "EV-R09-03-TESTS",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "State model tests for property type detection",
+      "source": "__tests__/prolink-controller-state.test.js"
+    }
+  ],
+  "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+  "acceptanceCriteria": [
+    "ProLinkControllerState classifies controller as continuous or discrete based on properties",
+    "Discrete detection: checks if bounds_a_raw/bounds_b_raw indicate 0/1 range or unit suggests boolean",
+    "Continuous detection: numeric bounds with range > 1 or continuous units (dB, Hz, etc.)",
+    "New variable: prolink_controller_type (continuous|discrete|unknown)",
+    "State preserves existing behavior for backward compatibility",
+    "Tests cover both continuous and discrete controller scenarios",
+    "All existing tests pass"
+  ],
+  "createdAt": "2026-11-16T03:45:00Z",
+  "updatedAt": "2026-11-16T04:20:00Z",
+  "status": "DONE",
+  "assignedRole": "Builder",
+  "attempts": 1,
+  "fixRounds": 0
+}

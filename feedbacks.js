@@ -31,6 +31,24 @@ module.exports = async function (self) {
 				self._prolinkObservations?.controllerState?.properties != null &&
 				self._prolinkObservations?.controllerState?.value != null,
 		},
+		prolink_controller_continuous: {
+			name: 'Selected ProLink controller is continuous (dB, Hz, etc.)',
+			type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(0, 100, 100), color: combineRgb(255, 255, 255) },
+			callback: () =>
+				self.config?.controlTransport === 'prolink' &&
+				self._prolink?.state === 'connected' &&
+				self._prolinkObservations?.controllerState?.controllerType === 'continuous',
+		},
+		prolink_controller_discrete: {
+			name: 'Selected ProLink controller is discrete (on/off, bool)',
+			type: 'boolean', options: [],
+			defaultStyle: { bgcolor: combineRgb(100, 0, 100), color: combineRgb(255, 255, 255) },
+			callback: () =>
+				self.config?.controlTransport === 'prolink' &&
+				self._prolink?.state === 'connected' &&
+				self._prolinkObservations?.controllerState?.controllerType === 'discrete',
+		},
 		// Status feedbacks do not interpret protocol values as healthy/unhealthy.
 		// They only report equality with actually observed Notify* payloads.
 		prolink_session_dirty_observed: {

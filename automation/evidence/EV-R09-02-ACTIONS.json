@@ -1,0 +1,24 @@
+{
+  "evidenceId": "EV-R09-02-ACTIONS",
+  "taskId": "R09-02",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Discrete step actions for SwitchControllerValue with focus guard",
+  "source": "actions.js",
+  "sha256": "7104cd9bda335f6dc0dd1537af9f2474fd7e744a123d0b84fba80535c23823d8",
+  "createdAt": "2026-11-16T03:30:00Z",
+  "details": {
+    "actionAdded": "prolink_controller_switch",
+    "actionName": "ProLink: Switch focused Touch-and-Turn controller (discrete)",
+    "options": {
+      "state": {
+        "type": "dropdown",
+        "choices": ["On (1)", "Off (0)"],
+        "default": 1
+      }
+    },
+    "focusGuard": "Requires controller.properties AND controller.value observed",
+    "codecUsed": "SwitchControllerValue (value 0 or 1)",
+    "writeTracking": "Tracks with contextVersion and previousSignature for readback correlation",
+    "distinctFrom": "prolink_controller_relative (ChangeControllerValue, relative delta)"
+  }
+}

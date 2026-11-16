@@ -1,4 +1,4 @@
-const { ProLinkControllerState } = require('../lib/prolink-controller-state')
+const { ProLinkControllerState, classifyControllerType } = require('../lib/prolink-controller-state')
 const { ProLinkObservations } = require('../lib/prolink-observations')
 const { decodeOsc } = require('../lib/prolink-osc')
 
@@ -94,4 +94,86 @@ test('debug log is emitted only for changes when legacy parser is muted for thes
 	obs.receive(VALUE_FRAME)
 	const messages = self._log.mock.calls.map(call => call[1])
 	expect(messages).toEqual(['[PROLINK_CONTROLLER_PROPERTIES_CHANGED]', '[PROLINK_CONTROLLER_VALUE_CHANGED]'])
+})
+
+test('classifyControllerType detects discrete from 0/1 bounds', () => {
+	// Threshold with 0..1 bounds -> discrete
+	const props = ['Threshold', true, 0, 0, 1, 'dB', 0.001, 0, false, 1, 'PSE', '0', '1']
+	expect(classifyControllerType(props)).toBe('discrete')
+
+	// Reverse order bounds 1..0 -> discrete
+	const props2 = ['Bypass', true, 0, 1, 0, 'bool', 0, 0, false, 1, '', '1', '0']
+	expect(classifyControllerType(props2)).toBe('discrete')
+})
+
+test('classifyControllerType detects continuous from range > 1', () => {
+	// Threshold with -60..0 dB -> continuous
+	const props = ['Threshold', true, 0, -60, 0, 'dB', 0.001, 0, false, 1, 'PSE', '-60', '0']
+	expect(classifyControllerType(props)).toBe('continuous')
+
+	// Frequency with 20..20000 Hz -> continuous
+	const props2 = ['Freq', true, 0, 20, 20000, 'Hz', 1, 100, false, 1, 'EQ', '20', '20000']
+	expect(classifyControllerType(props2)).toBe('continuous')
+
+	// Gain with -24..24 dB -> continuous
+	const props3 = ['Gain', true, 0, -24, 24, 'dB', 0.1, 0, false, 1, 'Comp', '-24', '24']
+	expect(classifyControllerType(props3)).toBe('continuous')
+})
+
+test('classifyControllerType uses unit heuristics', () => {
+	// Explicit discrete units
+	expect(classifyControllerType(['A', true, 0, 0, 1, 'bool', 0, 0, false, 1, '', '0', '1'])).toBe('discrete')
+	expect(classifyControllerType(['B', true, 0, 0, 1, 'boolean', 0, 0, false, 1, '', '0', '1'])).toBe('discrete')
+	expect(classifyControllerType(['C', true, 0, 0, 1, 'on/off', 0, 0, false, 1, '', '0', '1'])).toBe('discrete')
+	expect(classifyControllerType(['D', true, 0, 0, 1, 'switch', 0, 0, false, 1, '', '0', '1'])).toBe('discrete')
+	expect(classifyControllerType(['E', true, 0, 0, 1, 'toggle', 0, 0, false, 1, '', '0', '1'])).toBe('discrete')
+
+	// Continuous units with bounds that are NOT 0..1
+	expect(classifyControllerType(['A', true, 0, -60, 0, 'dB', 0, 0, false, 1, '', '-60', '0'])).toBe('continuous')
+	expect(classifyControllerType(['B', true, 0, 20, 20000, 'Hz', 0, 0, false, 1, '', '20', '20000'])).toBe('continuous')
+	expect(classifyControllerType(['C', true, 0, 0, 1000, 'ms', 0, 0, false, 1, '', '0', '1000'])).toBe('continuous')
+	expect(classifyControllerType(['D', true, 0, 0, 100, '%', 0, 0, false, 1, '', '0', '100'])).toBe('continuous')
+})
+
+test('classifyControllerType returns unknown when indeterminate', () => {
+	// No clear bounds or unit (bounds 0..0.5, empty unit)
+	expect(classifyControllerType(['A', true, 0, 0, 0.5, '', 0, 0, false, 1, '', '0', '0.5'])).toBe('unknown')
+	
+	// Bounds 10..20 with custom unit -> range > 1 so continuous
+	expect(classifyControllerType(['B', true, 0, 10, 20, 'custom', 0, 0, false, 1, '', '10', '20'])).toBe('continuous')
+	
+	// Null input
+	expect(classifyControllerType(null)).toBe('unknown')
+})
+
+test('ProLinkControllerState exposes controller type in reset and observe', () => {
+	const state = new ProLinkControllerState()
+	const resetVars = state.reset()
+	expect(resetVars.prolink_controller_type).toBe('unknown')
+
+	// Observe discrete properties (0..1 bounds)
+	const discreteProps = ['Bypass', true, 0, 0, 1, 'bool', 0, 0, false, 1, '', '0', '1']
+	const result = state.observeProperties(discreteProps)
+	expect(result.values.prolink_controller_type).toBe('discrete')
+	expect(state.controllerType).toBe('discrete')
+
+	// Observe continuous properties (-60..0 dB)
+	const continuousProps = ['Threshold', true, 0, -60, 0, 'dB', 0.001, 0, false, 1, 'PSE', '-60', '0']
+	const result2 = state.observeProperties(continuousProps)
+	expect(result2.values.prolink_controller_type).toBe('continuous')
+	expect(state.controllerType).toBe('continuous')
+})
+
+test('controller type resets on property change and invalidates value', () => {
+	const state = new ProLinkControllerState()
+	const discreteProps = ['Bypass', true, 0, 0, 1, 'bool', 0, 0, false, 1, '', '0', '1']
+	state.observeProperties(discreteProps)
+	expect(state.controllerType).toBe('discrete')
+
+	// Change to continuous properties
+	const continuousProps = ['Threshold', true, 0, -60, 0, 'dB', 0.001, 0, false, 1, 'PSE', '-60', '0']
+	const result = state.observeProperties(continuousProps)
+	expect(result.values.prolink_controller_type).toBe('continuous')
+	expect(state.controllerType).toBe('continuous')
+	expect(state.value).toBe(null) // value invalidated
 })

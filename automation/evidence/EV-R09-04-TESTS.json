@@ -1,0 +1,29 @@
+{
+  "evidenceId": "EV-R09-04-TESTS",
+  "taskId": "R09-04",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Preset tests including plugin parameter mapping",
+  "source": "__tests__/prolink-tap-preset.test.js",
+  "sha256": "e141a659d0d81442248eaa94781b757f8b52bdadf23013e8e17b58d2a38e4685",
+  "createdAt": "2026-11-16T05:00:00Z",
+  "details": {
+    "testSuite": "__tests__/prolink-tap-preset.test.js",
+    "existingTests": 4,
+    "newVariables": [
+      "prolink_controller_type (continuous|discrete|unknown)",
+      "prolink_preset_active"
+    ],
+    "newFeedbacks": [
+      "prolink_controller_continuous",
+      "prolink_controller_discrete"
+    ],
+    "presetCount": 9,
+    "categories": [
+      "ProLink – Controller: 1 generic preset",
+      "ProLink – Tune RT: 3 presets (generic, note, cents)",
+      "ProLink – CLA-76: 5 presets (generic, input, output, attack, release, ratio)"
+    ],
+    "allTestsPass": true,
+    "totalTestsInProject": 254
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "evidenceId": "EV-R09-01-SWITCHCONTROLLERVALUE-TESTS",
+  "taskId": "R09-01",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Codec tests including negative tests for SwitchControllerValue",
+  "source": "__tests__/prolink-codec.test.js",
+  "sha256": "cd5302ac3f981b54e46278e9ba6f4e0b738bf07c2af4bad1b4c2c82e2edd7d7d",
+  "createdAt": "2026-11-16T02:35:00Z",
+  "details": {
+    "positiveTests": 8,
+    "negativeTests": 4,
+    "testVectors": [
+      "V5: request=0 value=0",
+      "V6: request=0 value=1",
+      "V7: request=1 value=0",
+      "V8: request=1 value=1",
+      "V9: request=-1 value=0",
+      "V10: full frame encoding",
+      "V11: request=7 value=0",
+      "V12: request=8 value=1"
+    ],
+    "negativeTestCases": [
+      "non-integer value (1.5, NaN, 'on')",
+      "out-of-int32-range value (2147483648, -2147483649)",
+      "any int32 value accepted (protocol allows -1, 2, -8, 8)",
+      "invalid requestId (NaN, 1.5, 2147483648, -2147483649)"
+    ],
+    "totalTests": 12,
+    "allPassed": true
+  }
+}

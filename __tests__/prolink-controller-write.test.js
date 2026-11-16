@@ -110,3 +110,78 @@ test('failed sending does not create awaiting readback state', () => {
   expect(obs.controllerWrite).toBeNull()
   expect(values.prolink_controller_write_status).toBeUndefined()
 })
+
+test('SwitchControllerValue wire signature is request-id + int32 value (0 or 1)', () => {
+  expect(decodeOsc(encodeOsc('SwitchControllerValue',7,0))).toEqual({path:'/waves.com/remote/SwitchControllerValue',args:[7,0]})
+  expect(decodeOsc(encodeOsc('SwitchControllerValue',8,1)).args).toEqual([8,1])
+  expect(encodeCommand('SwitchControllerValue',9,0).readInt32BE(8)).toBe(5)
+  expect(() => encodeOsc('SwitchControllerValue',0,1.5)).toThrow('Expected int32')
+})
+
+test('prolink_controller_switch action exists and validates focus guard', async () => {
+  const {self,actions,obs}=setup()
+  const action=actions.prolink_controller_switch
+  expect(action).toBeDefined()
+  await action.callback({options:{state:1}})
+  expect(self._sendProlink).not.toHaveBeenCalled()
+  expect(self._controlFailure).toHaveBeenCalledWith('No selected controller properties and value observed; subscribe and select a control first')
+  observeSelection(obs)
+})
+
+test('prolink_controller_switch rejects invalid state values', async () => {
+  const {self,obs}=setup()
+  observeSelection(obs)
+  expect(self.switchFocusedProlinkController(2)).toBe(false)
+  expect(self._controlFailure).toHaveBeenCalledWith('Switch state must be 0 (off) or 1 (on)')
+  expect(self.switchFocusedProlinkController(-1)).toBe(false)
+  expect(self.switchFocusedProlinkController('on')).toBe(false)
+  expect(self._sendProlink).not.toHaveBeenCalled()
+})
+
+test('prolink_controller_switch sends SwitchControllerValue with correct value when focus valid', async () => {
+  const {self,obs}=setup()
+  observeSelection(obs)
+  expect(self.switchFocusedProlinkController(1)).toBe(true)
+  expect(self._sendProlink).toHaveBeenCalledWith('SwitchControllerValue',1)
+  expect(self._sendProlink).toHaveBeenCalledTimes(1)
+  expect(self.switchFocusedProlinkController(0)).toBe(true)
+  expect(self._sendProlink).toHaveBeenLastCalledWith('SwitchControllerValue',0)
+})
+
+test('prolink_controller_switch tracks write with context version for readback correlation', async () => {
+  const {self,obs,values}=setup()
+  observeSelection(obs)
+  const contextVersion = obs.controllerState.contextVersion
+  const previousSignature = obs.controllerState.value.signature
+  expect(self.switchFocusedProlinkController(1)).toBe(true)
+  expect(values.prolink_controller_write_status).toBe('awaiting_change')
+  expect(values.prolink_controller_write_delta).toBe(1)
+  expect(obs.controllerWrite).toEqual(expect.objectContaining({
+    delta: 1,
+    contextVersion: contextVersion,
+    previousSignature: previousSignature
+  }))
+  obs.reset()
+})
+
+test('prolink_controller_switch failed sending does not create awaiting readback state', () => {
+  const {self,obs,values}=setup()
+  observeSelection(obs)
+  self._sendProlink.mockReturnValue(false)
+  expect(self.switchFocusedProlinkController(1)).toBe(false)
+  expect(obs.controllerWrite).toBeNull()
+  expect(values.prolink_controller_write_status).toBeUndefined()
+})
+
+test('prolink_controller_switch new properties invalidate pending write', () => {
+  const {self,obs,values}=setup()
+  observeSelection(obs)
+  expect(self.switchFocusedProlinkController(1)).toBe(true)
+  const properties = decodeOsc(Buffer.from(PROPERTIES_HEX,'hex'))
+  properties.args[0] = 'Attack'
+  obs.observeControllerProperties(properties.args)
+  expect(values.prolink_controller_write_status).toBe('context_changed')
+  expect(values.prolink_controller_known).toBe(false)
+  obs.reset()
+  expect(values.prolink_controller_write_status).toBe('idle')
+})

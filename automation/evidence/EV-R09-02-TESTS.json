@@ -1,0 +1,29 @@
+{
+  "evidenceId": "EV-R09-02-TESTS",
+  "taskId": "R09-02",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Action tests including focus guard validation",
+  "source": "__tests__/prolink-controller-write.test.js",
+  "sha256": "b82452c1a734f3e8320938e923ebd51f932d9aa6be7b00e738fe84e3eaa6c904",
+  "createdAt": "2026-11-16T03:30:00Z",
+  "details": {
+    "positiveTests": 7,
+    "negativeTests": 3,
+    "testCases": [
+      "SwitchControllerValue wire signature validation (request-id + int32 value 0/1)",
+      "prolink_controller_switch action exists and validates focus guard",
+      "prolink_controller_switch rejects invalid state values (2, -1, 'on')",
+      "prolink_controller_switch sends SwitchControllerValue with correct value when focus valid",
+      "prolink_controller_switch tracks write with context version for readback correlation",
+      "prolink_controller_switch failed sending does not create awaiting readback state",
+      "prolink_controller_switch new properties invalidate pending write"
+    ],
+    "negativeTestCases": [
+      "No controller focus (properties/value not observed) -> rejects",
+      "Invalid state values (not 0 or 1) -> rejects",
+      "Failed sending -> no awaiting readback state"
+    ],
+    "totalTests": 10,
+    "allPassed": true
+  }
+}

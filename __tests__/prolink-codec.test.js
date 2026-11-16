@@ -84,3 +84,114 @@ test('validates integer limits, command names and name lengths', () => {
 	hello.writeInt32BE(-1, 40)
 	expect(() => new WaveParser().push(hello)).toThrow()
 })
+
+// SwitchControllerValue: V5-V12 wire captures per ProLink protocol
+// OSC path: /waves.com/remote/SwitchControllerValue (39 chars -> 40 bytes with null)
+// OSC tags: ,ii (requestId:int32, value:int32) -> 4 bytes padded (,ii\0)
+// Value semantics: 0=off, 1=on (discrete switch, distinct from relative ChangeControllerValue)
+// Total OSC payload: 40 + 4 + 8 = 52 bytes
+
+test('COMMAND_SCHEMAS includes SwitchControllerValue', () => {
+	const { COMMAND_SCHEMAS } = require('../lib/prolink-codec')
+	expect(Object.hasOwn(COMMAND_SCHEMAS, 'SwitchControllerValue')).toBe(true)
+	expect(typeof COMMAND_SCHEMAS.SwitchControllerValue).toBe('string')
+})
+
+// V5: SwitchControllerValue request=0 value=0
+test('SwitchControllerValue encodes value=0 (V5)', () => {
+	const { encodeOsc, encodeCommand } = require('../lib/prolink-codec')
+	const osc = encodeOsc('SwitchControllerValue', 0, 0)
+	expect(osc.toString('hex')).toBe('2f77617665732e636f6d2f72656d6f74652f537769746368436f6e74726f6c6c657256616c7565002c6969000000000000000000')
+	expect(osc.length).toBe(52)
+	const frame = encodeCommand('SwitchControllerValue', 0, 0)
+	expect(frame.subarray(0, 12).toString('hex')).toBe('000000015761766500000005')
+	expect(frame.readInt32BE(12)).toBe(52)
+	expect(frame.subarray(16)).toEqual(osc)
+})
+
+// V6: SwitchControllerValue request=0 value=1
+test('SwitchControllerValue encodes value=1 (V6)', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	const osc = encodeOsc('SwitchControllerValue', 0, 1)
+	expect(osc.toString('hex')).toBe('2f77617665732e636f6d2f72656d6f74652f537769746368436f6e74726f6c6c657256616c7565002c6969000000000000000001')
+	expect(osc.length).toBe(52)
+})
+
+// V7: SwitchControllerValue request=1 value=0
+test('SwitchControllerValue encodes request=1 value=0 (V7)', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	const osc = encodeOsc('SwitchControllerValue', 1, 0)
+	expect(osc.toString('hex')).toBe('2f77617665732e636f6d2f72656d6f74652f537769746368436f6e74726f6c6c657256616c7565002c6969000000000100000000')
+	expect(osc.length).toBe(52)
+})
+
+// V8: SwitchControllerValue request=1 value=1
+test('SwitchControllerValue encodes request=1 value=1 (V8)', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	const osc = encodeOsc('SwitchControllerValue', 1, 1)
+	expect(osc.toString('hex')).toBe('2f77617665732e636f6d2f72656d6f74652f537769746368436f6e74726f6c6c657256616c7565002c6969000000000100000001')
+	expect(osc.length).toBe(52)
+})
+
+// V9: SwitchControllerValue request=-1 value=0 (negative requestId)
+test('SwitchControllerValue encodes negative requestId (V9)', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	const osc = encodeOsc('SwitchControllerValue', -1, 0)
+	expect(osc.toString('hex')).toBe('2f77617665732e636f6d2f72656d6f74652f537769746368436f6e74726f6c6c657256616c7565002c696900ffffffff00000000')
+	expect(osc.length).toBe(52)
+})
+
+// V10: SwitchControllerValue full frame encoding
+test('SwitchControllerValue full frame (V10)', () => {
+	const { encodeCommand } = require('../lib/prolink-codec')
+	const frame = encodeCommand('SwitchControllerValue', 0, 1)
+	expect(frame.subarray(0, 12).toString('hex')).toBe('000000015761766500000005')
+	expect(frame.readInt32BE(12)).toBe(52)
+	expect(frame.subarray(16).toString('hex')).toBe('2f77617665732e636f6d2f72656d6f74652f537769746368436f6e74726f6c6c657256616c7565002c6969000000000000000001')
+})
+
+// V11: SwitchControllerValue with different sequence
+test('SwitchControllerValue sequence=7 value=0 (V11)', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	const osc = encodeOsc('SwitchControllerValue', 7, 0)
+	expect(osc.toString('hex')).toBe('2f77617665732e636f6d2f72656d6f74652f537769746368436f6e74726f6c6c657256616c7565002c6969000000000700000000')
+	expect(osc.length).toBe(52)
+})
+
+// V12: SwitchControllerValue sequence=8 value=1
+test('SwitchControllerValue sequence=8 value=1 (V12)', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	const osc = encodeOsc('SwitchControllerValue', 8, 1)
+	expect(osc.toString('hex')).toBe('2f77617665732e636f6d2f72656d6f74652f537769746368436f6e74726f6c6c657256616c7565002c6969000000000800000001')
+	expect(osc.length).toBe(52)
+})
+
+// Negative tests for SwitchControllerValue
+test('SwitchControllerValue rejects non-integer value', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	expect(() => encodeOsc('SwitchControllerValue', 0, 1.5)).toThrow('Expected int32')
+	expect(() => encodeOsc('SwitchControllerValue', 0, NaN)).toThrow('Expected int32')
+	expect(() => encodeOsc('SwitchControllerValue', 0, 'on')).toThrow('Expected int32')
+})
+
+test('SwitchControllerValue rejects out-of-int32-range value', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	expect(() => encodeOsc('SwitchControllerValue', 0, 2147483648)).toThrow('Expected int32')
+	expect(() => encodeOsc('SwitchControllerValue', 0, -2147483649)).toThrow('Expected int32')
+})
+
+test('SwitchControllerValue accepts any int32 value (protocol encodes any int32)', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	// These should not throw - protocol encodes any int32; application layer restricts to 0/1
+	expect(() => encodeOsc('SwitchControllerValue', 0, -1)).not.toThrow()
+	expect(() => encodeOsc('SwitchControllerValue', 0, 2)).not.toThrow()
+	expect(() => encodeOsc('SwitchControllerValue', 0, -8)).not.toThrow()
+	expect(() => encodeOsc('SwitchControllerValue', 0, 8)).not.toThrow()
+})
+
+test('SwitchControllerValue rejects invalid requestId', () => {
+	const { encodeOsc } = require('../lib/prolink-codec')
+	for (const id of [NaN, 1.5, 2147483648, -2147483649]) {
+		expect(() => encodeOsc('SwitchControllerValue', id, 0)).toThrow('Expected int32')
+	}
+})

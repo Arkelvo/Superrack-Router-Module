@@ -1,0 +1,50 @@
+{
+  "evidenceId": "EV-R09-05-REGRESSION",
+  "taskId": "R09-05",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Comprehensive regression test suite",
+  "source": "__tests__/prolink-regression.test.js",
+  "sha256": "a04a858122db4e01e915822726b25b0f39492889b05ffef8938b98d1eb381397",
+  "createdAt": "2026-11-16T05:45:00Z",
+  "details": {
+    "testFile": "__tests__/prolink-regression.test.js",
+    "testSuites": 7,
+    "totalTests": 28,
+    "categories": [
+      "ProLink Codec Regression (5 tests)",
+      "WaveParser Regression (4 tests)",
+      "OSC Decoder Regression (3 tests)",
+      "ProLinkControllerState Regression (6 tests)",
+      "ProLink Actions Regression (5 tests)",
+      "ProLinkObservations Regression (2 tests)",
+      "Snapshot Actions Regression (1 test)",
+      "Full Integration Regression (2 tests)"
+    ],
+    "coverage": [
+      "All original 10 OSC vectors",
+      "SwitchControllerValue V5-V12 vectors",
+      "All COMMAND_SCHEMAS entries",
+      "Int32 validation for all commands",
+      "Hello/Discovery encoding",
+      "All split points and coalesced frames",
+      "Invalid frame rejection",
+      "TCP type 2 handling",
+      "OSC decoding for all command types",
+      "Live OSC packet decoding",
+      "Property/value exposure",
+      "Deduplication of unchanged notifications",
+      "Property change invalidation",
+      "Invalid shape rejection",
+      "Controller type classification",
+      "All action definitions",
+      "Controller relative/switch actions",
+      "runProlinkExtension routing",
+      "Auto-subscription on connect",
+      "Reset clears all state",
+      "Snapshot command schemas",
+      "Full controller workflow",
+      "Preset definitions loading"
+    ],
+    "allPassed": true
+  }
+}

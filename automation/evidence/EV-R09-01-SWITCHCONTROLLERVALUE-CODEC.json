@@ -1,0 +1,17 @@
+{
+  "evidenceId": "EV-R09-01-SWITCHCONTROLLERVALUE-CODEC",
+  "taskId": "R09-01",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "SwitchControllerValue encode/decode implementation matching V5-V12 wire captures",
+  "source": "lib/prolink-codec.js",
+  "sha256": "333bf8dab8ad6ceebd2e2f32579f5b9790c46b1efd60f3ee95bc2ce510705c49",
+  "createdAt": "2026-11-16T02:35:00Z",
+  "details": {
+    "commandAdded": "SwitchControllerValue",
+    "schema": "i",
+    "oscPath": "/waves.com/remote/SwitchControllerValue",
+    "oscTags": ",ii (requestId:int32, value:int32)",
+    "valueSemantics": "0=off, 1=on (discrete switch)",
+    "distinctFrom": "ChangeControllerValue (relative delta)"
+  }
+}

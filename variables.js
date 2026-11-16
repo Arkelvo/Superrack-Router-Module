@@ -80,6 +80,8 @@ module.exports = function (self) {
 		{ variableId: 'prolink_controller_context_version', name: 'Local controller context revision (not a remote ID)' },
 		{ variableId: 'prolink_controller_last_properties_update_ms', name: 'Latest changed controller properties received (Unix ms)' },
 		{ variableId: 'prolink_controller_last_value_update_ms', name: 'Latest changed controller value received (Unix ms)' },
+		{ variableId: 'prolink_controller_type', name: 'Selected controller type: continuous | discrete | unknown' },
+		{ variableId: 'prolink_preset_active', name: 'Active ProLink preset identifier' },
 		{ variableId: 'last_action_timestamp', name: 'Last action timestamp (ms)' },
 		{ variableId: 'failed_steps_total', name: 'Failed control steps (total)' },
 		{ variableId: 'midi_last_type', name: 'Last MIDI type' },

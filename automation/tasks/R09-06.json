@@ -1,0 +1,42 @@
+{
+  "taskId": "R09-06",
+  "version": "1.0.0",
+  "phase": "0.9.0",
+  "title": "Live-Akzeptanz",
+  "description": "Document live SuperRack acceptance testing procedures and results. Create acceptance test plan and record evidence. This task documents the manual acceptance process - actual live testing requires physical SuperRack hardware. Evidence class: DOCUMENTED (acceptance plan) + RUNTIME_CONFIRMED (if live testing performed).",
+  "allowedPaths": [
+    "automation/evidence/",
+    "automation/reports/",
+    "docs/PROLINK.md"
+  ],
+  "dependencies": ["R09-05"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-R09-06-ACCEPTANCE-PLAN",
+      "type": "DOCUMENTED",
+      "description": "Live acceptance test plan based on PROLINK.md manual acceptance steps",
+      "source": "automation/reports/R09-06-ACCEPTANCE-PLAN.md"
+    },
+    {
+      "evidenceId": "EV-R09-06-ACCEPTANCE-RESULTS",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Live acceptance test results (requires physical SuperRack hardware)",
+      "source": "automation/evidence/R09-06-LIVE-RESULTS.json"
+    }
+  ],
+  "gates": ["G07", "G08"],
+  "acceptanceCriteria": [
+    "Acceptance test plan documented with all 8 steps from PROLINK.md",
+    "Test matrix covers: Legacy regression, Discovery, Handshake, Rack selection, Snapshot gates, Disconnect/reconnect, Lifecycle/errors, Parser robustness",
+    "Live evidence template created for recording actual SuperRack test results",
+    "G07: Live readback only with approved test profile (documented)",
+    "G08: No main merge/tag push/release publish by AI (enforced by automation)",
+    "If live testing performed: results recorded with timestamps, OS, versions, captures"
+  ],
+  "createdAt": "2026-11-16T06:00:00Z",
+  "updatedAt": "2026-11-16T06:20:00Z",
+  "status": "DONE",
+  "assignedRole": "Planner",
+  "attempts": 1,
+  "fixRounds": 0
+}

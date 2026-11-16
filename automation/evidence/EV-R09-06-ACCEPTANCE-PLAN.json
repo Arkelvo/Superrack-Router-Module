@@ -1,0 +1,33 @@
+{
+  "evidenceId": "EV-R09-06-ACCEPTANCE-PLAN",
+  "taskId": "R09-06",
+  "type": "DOCUMENTED",
+  "description": "Live acceptance test plan based on PROLINK.md manual acceptance steps",
+  "source": "automation/reports/R09-06-ACCEPTANCE-PLAN.md",
+  "sha256": "c6e721f3a76751b5b95ee8f32c6d3712b2e73b33ef83c2beac916814c57b1dda",
+  "createdAt": "2026-11-16T06:15:00Z",
+  "details": {
+    "testSteps": 8,
+    "totalTestCases": 32,
+    "prerequisites": [
+      "Windows/Linux/macOS with Companion",
+      "Waves SuperRack Performer/SoundGrid V15+",
+      "IPv6 link-local network interface",
+      "UDP 40123 / multicast ff12::7776",
+      "Disposable test show"
+    ],
+    "stepsCovered": [
+      "1. Legacy Regression (MIDI backward compatibility)",
+      "2. Discovery (ProLink transport, interface, capture)",
+      "3. Handshake (Hello, heartbeat, identity)",
+      "4. Rack Selection (visible 1/8/64 → wire ID 0/7/63)",
+      "5. Snapshot Gates (Recall/Highlight with provider IDs)",
+      "6. Disconnect/Reconnect (no replay, single peer)",
+      "7. Lifecycle/Errors (mode switching, failures)",
+      "8. Parser Robustness (malformed frames)"
+    ],
+    "g07Compliance": "This plan serves as approved test profile for live readback",
+    "g08Compliance": "Automation enforces no AI main push/tag/publish",
+    "resultsTemplate": "automation/evidence/R09-06-LIVE-RESULTS.json"
+  }
+}

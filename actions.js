@@ -57,6 +57,25 @@ module.exports = function (self) {
 		return true
 	}
 
+	// Focus-bound discrete switch control; sets controller to 0 (off) or 1 (on).
+	// Requires live controller properties and value (focus guard) before allowing write.
+	// Uses SwitchControllerValue codec (distinct from relative ChangeControllerValue).
+	self.switchFocusedProlinkController = function (state) {
+		const value = Number(state)
+		if (![0, 1].includes(value)) {
+			return self._controlFailure('Switch state must be 0 (off) or 1 (on)')
+		}
+		const controller = self._prolinkObservations?.controllerState
+		if (!controller?.properties || !controller?.value) {
+			return self._controlFailure('No selected controller properties and value observed; subscribe and select a control first')
+		}
+		const contextVersion = controller.contextVersion
+		const previousSignature = controller.value.signature
+		if (self._sendProlink('SwitchControllerValue', value) !== true) return false
+		self._prolinkObservations.trackControllerWrite({ delta: value, contextVersion, previousSignature })
+		return true
+	}
+
 	// Available only after a validated GiveListOfSnapshot. These choices
 	// are provider IDs, not a MIDI hot-snapshot slot or request sequence.
 	const snapshots = self._prolinkObservations?.snapshots
@@ -165,6 +184,17 @@ module.exports = function (self) {
 				{ id: 'steps', type: 'number', label: 'Relative delta magnitude (1-8, NOT dB)', min: 1, max: 8, default: 1 },
 			],
 			callback: async (event) => self.changeFocusedProlinkController(event.options.direction, event.options.steps),
+		},
+		prolink_controller_switch: {
+			name: 'ProLink: Switch focused Touch-and-Turn controller (discrete)',
+			options: [
+				{
+					id: 'state', type: 'dropdown', label: 'Switch state',
+					choices: [{ id: 1, label: 'On' }, { id: 0, label: 'Off' }],
+					default: 1,
+				},
+			],
+			callback: async (event) => self.switchFocusedProlinkController(event.options.state),
 		},
 		prolink_controller_subscription: {
 			name: 'ProLink: Subscribe to focused controller updates',

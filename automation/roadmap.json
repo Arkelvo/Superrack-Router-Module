@@ -85,7 +85,7 @@
         {
           "taskId": "R09-01",
           "title": "Codec: SwitchControllerValue Implementation",
-          "status": "PENDING",
+          "status": "DONE",
           "dependencies": ["A0-08"],
           "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
           "allowedPaths": ["lib/prolink-codec.js", "__tests__/prolink-codec.test.js", "docs/PROLINK*.md"]
@@ -93,7 +93,7 @@
         {
           "taskId": "R09-02",
           "title": "Actions: Discrete Steps with Focus Guard",
-          "status": "PENDING",
+          "status": "DONE",
           "dependencies": ["R09-01"],
           "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
           "allowedPaths": ["actions.js", "__tests__/prolink-controller-write.test.js"]
@@ -101,7 +101,7 @@
         {
           "taskId": "R09-03",
           "title": "Zustandsmodell: Continuous/Discrete Properties",
-          "status": "PENDING",
+          "status": "DONE",
           "dependencies": ["R09-01"],
           "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
           "allowedPaths": ["lib/prolink-controller-state.js", "__tests__/prolink-controller-state.test.js"]
@@ -109,7 +109,7 @@
         {
           "taskId": "R09-04",
           "title": "Presets: Generic + Tune RT/CLA-76",
-          "status": "PENDING",
+          "status": "DONE",
           "dependencies": ["R09-02", "R09-03"],
           "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
           "allowedPaths": ["presets.js", "actions.js", "feedbacks.js", "variables.js", "__tests__/prolink-tap-preset.test.js"]
@@ -117,7 +117,7 @@
         {
           "taskId": "R09-05",
           "title": "Automatische Regression",
-          "status": "PENDING",
+          "status": "DONE",
           "dependencies": ["R09-04"],
           "gates": ["G01", "G04", "G05", "G06"],
           "allowedPaths": ["__tests__/"]
@@ -125,7 +125,7 @@
         {
           "taskId": "R09-06",
           "title": "Live-Akzeptanz",
-          "status": "PENDING",
+          "status": "DONE",
           "dependencies": ["R09-05"],
           "gates": ["G07", "G08"],
           "allowedPaths": ["automation/evidence/", "automation/reports/"]
