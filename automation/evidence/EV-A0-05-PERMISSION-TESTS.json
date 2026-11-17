@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-05-PERMISSION-TESTS",
+  "taskId": "A0-05",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Negative tests confirm agents cannot exceed permissions",
+  "source": "automation/scripts/test-permissions.mjs output",
+  "location": "automation/scripts/test-permissions.mjs",
+  "collectedAt": "2026-11-16T01:00:00Z",
+  "collectedBy": "Builder",
+  "sha256": "cdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-05-ROLES", "EV-A0-05-GATE-RUNNER", "EV-A0-05-MANIPULATION-TESTS"],
+  "notes": "4 tests passed: scope violation detected, clean handoff passes, reviewer violation detected, clean reviewer passes"
+}

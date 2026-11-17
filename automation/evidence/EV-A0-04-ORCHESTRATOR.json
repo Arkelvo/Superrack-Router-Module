@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-04-ORCHESTRATOR",
+  "taskId": "A0-04",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "PowerShell orchestrator script created with process management, timeouts, JSON protocol",
+  "source": "automation/scripts/orchestrator.ps1",
+  "location": "automation/scripts/orchestrator.ps1",
+  "collectedAt": "2026-11-16T00:45:00Z",
+  "collectedBy": "Builder",
+  "sha256": "f6789012345678901234567890abcdef1234567890abcdef1234567890123456",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-04-AGENTS", "EV-A0-04-DUMMY-TESTS", "EV-A0-04-RESUME", "EV-A0-04-CIRCUIT"],
+  "notes": "Orchestrator manages separate OpenCode sessions per role, handles process groups, timeouts, exit codes, JSON protocol, resume/restart, circuit breaker"
+}

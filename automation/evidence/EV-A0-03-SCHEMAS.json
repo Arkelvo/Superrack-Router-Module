@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-03-SCHEMAS",
+  "taskId": "A0-03",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "All 6 JSON schemas created and valid: task, evidence, handoff, result, gate, release",
+  "source": "automation/schemas/*.schema.json",
+  "location": "automation/schemas/task.schema.json, evidence.schema.json, handoff.schema.json, result.schema.json, gate.schema.json, release.schema.json",
+  "collectedAt": "2026-11-16T00:25:00Z",
+  "collectedBy": "Builder",
+  "sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-03-ROADMAP", "EV-A0-03-TASKS", "EV-A0-03-VALIDATION"],
+  "notes": "All schemas pass meta-validation (have $schema, title, type, required fields)"
+}

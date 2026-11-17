@@ -1,0 +1,22 @@
+{
+  "evidenceId": "EV-R09-03-TESTS",
+  "taskId": "R09-03",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "State model tests for property type detection",
+  "source": "__tests__/prolink-controller-state.test.js",
+  "sha256": "e141a659d0d81442248eaa94781b757f8b52bdadf23013e8e17b58d2a38e4685",
+  "createdAt": "2026-11-16T04:15:00Z",
+  "details": {
+    "newTests": 6,
+    "testCases": [
+      "classifyControllerType detects discrete from 0/1 bounds (forward and reverse)",
+      "classifyControllerType detects continuous from range > 1 (dB, Hz, gain examples)",
+      "classifyControllerType uses unit heuristics (discrete units, continuous units with non-0..1 bounds)",
+      "classifyControllerType returns unknown when indeterminate (0..0.5 bounds, null input)",
+      "ProLinkControllerState exposes controller type in reset and observe",
+      "controller type resets on property change and invalidates value"
+    ],
+    "totalTestsInSuite": 12,
+    "allPassed": true
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Evidence Record",
+  "type": "object",
+  "required": ["evidenceId", "taskId", "planVersion", "type", "description", "source", "location", "collectedAt", "collectedBy", "sha256", "verdict"],
+  "properties": {
+    "evidenceId": {
+      "type": "string",
+      "pattern": "^EV-[A-Z0-9-]+$",
+      "description": "Unique evidence identifier"
+    },
+    "taskId": {
+      "type": "string",
+      "description": "Associated task ID"
+    },
+    "planVersion": {
+      "type": "string",
+      "description": "Plan version when evidence was collected"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["STATIC_CONFIRMED", "RUNTIME_CONFIRMED", "DOCUMENTED", "INFERRED", "UNPROVEN", "DISPROVEN_IN_SCOPE"],
+      "description": "Evidence class per Master Plan definitions"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this evidence proves"
+    },
+    "source": {
+      "type": "string",
+      "description": "Source of evidence (file, capture, document, live test)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Exact location (file path, line numbers, capture timestamp, etc.)"
+    },
+    "collectedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "collectedBy": {
+      "type": "string",
+      "enum": ["Planner", "Builder", "Reviewer", "Fixer", "Orchestrator", "GateRunner", "LiveTest"],
+      "description": "Role that collected this evidence"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hash of the evidence artifact (capture, document, log)"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["SUPPORTS", "REFUTES", "INCONCLUSIVE"],
+      "description": "Whether evidence supports, refutes, or is inconclusive for the claim"
+    },
+    "relatedEvidence": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Other evidence IDs this relates to"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional context or limitations"
+    }
+  },
+  "additionalProperties": false
+}

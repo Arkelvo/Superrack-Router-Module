@@ -1,0 +1,85 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-checks-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Test and Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Enable Corepack (Yarn v4)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run tests
+        run: yarn test
+
+      - name: Build package
+        run: yarn package
+
+      - name: Verify package version
+        run: |
+          PKG_VERSION=$(node -e "console.log(require('./package.json').version)")
+          MANIFEST_VERSION=$(node -e "console.log(require('./companion/manifest.json').version)")
+          if [ "$PKG_VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "Version mismatch: package.json=$PKG_VERSION, manifest.json=$MANIFEST_VERSION"
+            exit 1
+          fi
+          echo "Versions match: $PKG_VERSION"
+
+      - name: Verify package artifact
+        run: |
+          TGZ_FILE=$(ls *.tgz | head -n1)
+          if [ -z "$TGZ_FILE" ]; then
+            echo "No .tgz package found"
+            exit 1
+          fi
+          echo "Package artifact: $TGZ_FILE"
+          tar -tzf "$TGZ_FILE" | head -20
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Enable Corepack (Yarn v4)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Check formatting
+        run: yarn format --check

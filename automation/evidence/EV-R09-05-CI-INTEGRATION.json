@@ -1,0 +1,44 @@
+{
+  "evidenceId": "EV-R09-05-CI-INTEGRATION",
+  "taskId": "R09-05",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "CI integration for regression tests",
+  "source": ".github/workflows/pr-checks.yml",
+  "sha256": "pending",
+  "createdAt": "2026-11-16T05:45:00Z",
+  "details": {
+    "workflowFile": ".github/workflows/pr-checks.yml",
+    "triggers": ["pull_request opened/synchronize/reopened/ready_for_review", "pull_request_review submitted"],
+    "jobs": [
+      {
+        "name": "test-and-build",
+        "runsOn": "ubuntu-latest",
+        "timeoutMinutes": 20,
+        "steps": [
+          "Checkout repository",
+          "Set up Node.js 22 with yarn cache",
+          "Enable Corepack (Yarn v4)",
+          "Install dependencies (yarn install --immutable)",
+          "Run tests (yarn test)",
+          "Build package (yarn package)",
+          "Verify package version matches manifest",
+          "Verify package artifact exists"
+        ]
+      },
+      {
+        "name": "lint",
+        "runsOn": "ubuntu-latest",
+        "timeoutMinutes": 10,
+        "steps": [
+          "Checkout repository",
+          "Set up Node.js 22 with yarn cache",
+          "Enable Corepack",
+          "Install dependencies",
+          "Check formatting (yarn format --check)"
+        ]
+      }
+    ],
+    "regressionTestsIncluded": true,
+    "notes": "Regression tests run as part of 'yarn test' in test-and-build job on every PR"
+  }
+}

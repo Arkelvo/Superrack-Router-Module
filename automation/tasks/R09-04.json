@@ -1,0 +1,46 @@
+{
+  "taskId": "R09-04",
+  "version": "1.0.0",
+  "phase": "0.9.0",
+  "title": "Presets: Generic + Tune RT/CLA-76",
+  "description": "Implement generic ProLink presets and plugin-specific presets for Tune RT and CLA-76. Create preset definitions that map plugin parameters to controller actions. Evidence class: RUNTIME_CONFIRMED.",
+  "allowedPaths": [
+    "presets.js",
+    "actions.js",
+    "feedbacks.js",
+    "variables.js",
+    "__tests__/prolink-tap-preset.test.js"
+  ],
+  "dependencies": ["R09-02", "R09-03"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-R09-04-PRESETS",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Generic and plugin-specific preset definitions",
+      "source": "presets.js"
+    },
+    {
+      "evidenceId": "EV-R09-04-TESTS",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Preset tests including plugin parameter mapping",
+      "source": "__tests__/prolink-tap-preset.test.js"
+    }
+  ],
+  "gates": ["G01", "G02", "G03", "G04", "G05", "G06", "G07"],
+  "acceptanceCriteria": [
+    "Generic ProLink preset with common controller actions (switch, relative adjust)",
+    "Tune RT preset with parameter mappings (note, cents, octave, etc.)",
+    "CLA-76 preset with parameter mappings (input, output, attack, release, ratio, etc.)",
+    "Presets integrate with existing action definitions",
+    "Feedback definitions for preset parameter display",
+    "Variable definitions for preset state tracking",
+    "Tests verify preset structure and parameter mappings",
+    "All existing tests pass"
+  ],
+  "createdAt": "2026-11-16T04:30:00Z",
+  "updatedAt": "2026-11-16T05:05:00Z",
+  "status": "DONE",
+  "assignedRole": "Builder",
+  "attempts": 1,
+  "fixRounds": 0
+}

@@ -1,0 +1,57 @@
+{
+  "taskId": "A0-06",
+  "version": "1.0.0",
+  "phase": "A0",
+  "title": "CI härten",
+  "description": "PR-Checks bei Pull-Request-Erstellung/Push, Windows/Linux-Matrix bei Bedarf, Runtime-Node passend zur Modul-Runtime, Paketinhalt validieren. Gate: erfolgreicher CI-Run und gezielter Fail-Case.",
+  "allowedPaths": [
+    ".github/workflows/"
+  ],
+  "dependencies": ["A0-03"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-A0-06-WORKFLOWS",
+      "type": "STATIC_CONFIRMED",
+      "description": "New CI workflows created: pr-checks.yml, release-prepare.yml, release-finalize.yml, release-audit.yml",
+      "source": ".github/workflows/*.yml"
+    },
+    {
+      "evidenceId": "EV-A0-06-NODE-VERSION",
+      "type": "STATIC_CONFIRMED",
+      "description": "All workflows use Node 22 (matching project engines)",
+      "source": ".github/workflows/*.yml"
+    },
+    {
+      "evidenceId": "EV-A0-06-PR-TRIGGER",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "PR checks trigger on pull_request open, synchronize, reopened",
+      "source": ".github/workflows/pr-checks.yml"
+    },
+    {
+      "evidenceId": "EV-A0-06-BUILD-VALIDATION",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Package build and content validation in CI",
+      "source": ".github/workflows/pr-checks.yml"
+    },
+    {
+      "evidenceId": "EV-A0-06-OLD-WORKFLOW",
+      "type": "STATIC_CONFIRMED",
+      "description": "Old release-on-version-change.yaml disabled/removed",
+      "source": ".github/workflows/release-on-version-change.yaml"
+    }
+  ],
+  "gates": ["G01", "G04", "G06"],
+  "acceptanceCriteria": [
+    "New PR workflow triggers on PR open/synchronize/reopen",
+    "All workflows use Node 22 (not 24)",
+    "Package build validation in CI",
+    "Old release-on-version-change workflow disabled",
+    "CI passes on current codebase"
+  ],
+  "createdAt": "2026-11-16T01:00:00Z",
+  "updatedAt": "2026-11-16T01:00:00Z",
+  "status": "DONE",
+  "assignedRole": "Builder",
+  "attempts": 1,
+  "fixRounds": 0
+}

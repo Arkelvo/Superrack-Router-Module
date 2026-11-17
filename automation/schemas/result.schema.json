@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Task Result",
+  "type": "object",
+  "required": ["taskId", "planVersion", "finalStatus", "completedAt", "handoffIds", "evidenceIds", "allGatesPassed", "finalCommit", "artifactHashes"],
+  "properties": {
+    "taskId": {
+      "type": "string",
+      "description": "Task identifier"
+    },
+    "planVersion": {
+      "type": "string",
+      "description": "Plan version"
+    },
+    "finalStatus": {
+      "type": "string",
+      "enum": ["AUTO_VERIFIED", "DONE", "AWAITING_LIVE_TEST", "AWAITING_APPROVAL", "BLOCKED", "FAILED"],
+      "description": "Final task status as determined by external Gate Runner"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "handoffIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "All handoff IDs for this task"
+    },
+    "evidenceIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "All evidence IDs for this task"
+    },
+    "allGatesPassed": {
+      "type": "boolean",
+      "description": "Whether all required gates passed"
+    },
+    "gateResults": {
+      "type": "object",
+      "properties": {
+        "G01": { "type": "boolean" },
+        "G02": { "type": "boolean" },
+        "G03": { "type": "boolean" },
+        "G04": { "type": "boolean" },
+        "G05": { "type": "boolean" },
+        "G06": { "type": "boolean" },
+        "G07": { "type": "boolean" },
+        "G08": { "type": "boolean" },
+        "G09": { "type": "boolean" },
+        "G10": { "type": "boolean" }
+      },
+      "description": "Per-gate pass/fail results"
+    },
+    "finalCommit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "Final commit SHA for this task"
+    },
+    "artifactHashes": {
+      "type": "object",
+      "properties": {
+        "packageTgzSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "manifestVersion": { "type": "string" },
+        "packageJsonVersion": { "type": "string" }
+      },
+      "description": "Build artifact hashes and versions"
+    },
+    "totalAttempts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "totalFixRounds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "totalDurationMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "notes": {
+      "type": "string",
+      "description": "Final notes from Gate Runner"
+    }
+  },
+  "additionalProperties": false
+}

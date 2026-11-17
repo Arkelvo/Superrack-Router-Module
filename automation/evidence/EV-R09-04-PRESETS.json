@@ -1,0 +1,89 @@
+{
+  "evidenceId": "EV-R09-04-PRESETS",
+  "taskId": "R09-04",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Generic and plugin-specific preset definitions",
+  "source": "presets.js",
+  "sha256": "848fa4f7ef8e8f08b59d1cc3b60d15a094095b5cb8353108a651b8d2ae85d9b4",
+  "createdAt": "2026-11-16T05:00:00Z",
+  "details": {
+    "presetsAdded": 9,
+    "categories": [
+      "ProLink – Controller (1 preset)",
+      "ProLink – Tune RT (3 presets)",
+      "ProLink – CLA-76 (5 presets)"
+    ],
+    "presetList": [
+      {
+        "id": "prolink_controller_generic",
+        "name": "Generic Controller (Switch + Relative)",
+        "category": "ProLink – Controller",
+        "actions": ["prolink_controller_switch (On/Off)", "prolink_controller_relative (+1/-1)"],
+        "feedback": "prolink_controller_observed"
+      },
+      {
+        "id": "prolink_tune_rt",
+        "name": "Waves Tune RT (Pitch Correction)",
+        "category": "ProLink – Tune RT",
+        "actions": ["prolink_controller_switch (On/Off)", "prolink_controller_relative (+1)"],
+        "feedback": "prolink_controller_observed"
+      },
+      {
+        "id": "prolink_tune_rt_note",
+        "name": "Tune RT – Note/Root Select",
+        "category": "ProLink – Tune RT",
+        "actions": ["prolink_controller_switch (On/Off)"],
+        "feedback": "prolink_controller_observed"
+      },
+      {
+        "id": "prolink_tune_rt_cents",
+        "name": "Tune RT – Cents/Amount",
+        "category": "ProLink – Tune RT",
+        "actions": ["prolink_controller_relative (+2)"],
+        "feedback": "prolink_controller_observed"
+      },
+      {
+        "id": "prolink_cla76",
+        "name": "Waves CLA-76 (Compressor)",
+        "category": "ProLink – CLA-76",
+        "actions": ["prolink_controller_switch (On/Off)", "prolink_controller_relative (+1)"],
+        "feedback": "prolink_controller_observed"
+      },
+      {
+        "id": "prolink_cla76_input",
+        "name": "CLA-76 – Input Gain",
+        "category": "ProLink – CLA-76",
+        "actions": ["prolink_controller_relative (+1)"],
+        "feedback": "prolink_controller_observed"
+      },
+      {
+        "id": "prolink_cla76_output",
+        "name": "CLA-76 – Output Gain",
+        "category": "ProLink – CLA-76",
+        "actions": ["prolink_controller_relative (-1)"],
+        "feedback": "prolink_controller_observed"
+      },
+      {
+        "id": "prolink_cla76_attack",
+        "name": "CLA-76 – Attack",
+        "category": "ProLink – CLA-76",
+        "actions": ["prolink_controller_relative (+1)"],
+        "feedback": "prolink_controller_observed"
+      },
+      {
+        "id": "prolink_cla76_release",
+        "name": "CLA-76 – Release",
+        "category": "ProLink – CLA-76",
+        "actions": ["prolink_controller_relative (+1)"],
+        "feedback": "prolink_controller_observed"
+      },
+      {
+        "id": "prolink_cla76_ratio",
+        "name": "CLA-76 – Ratio",
+        "category": "ProLink – CLA-76",
+        "actions": ["prolink_controller_switch (On/Off)"],
+        "feedback": "prolink_controller_observed"
+      }
+    ]
+  }
+}

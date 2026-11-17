@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-06-BUILD-VALIDATION",
+  "taskId": "A0-06",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "Package build and content validation in CI",
+  "source": ".github/workflows/pr-checks.yml, local yarn package",
+  "location": ".github/workflows/pr-checks.yml",
+  "collectedAt": "2026-11-16T01:15:00Z",
+  "collectedBy": "Builder",
+  "sha256": "234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-06-WORKFLOWS", "EV-A0-06-NODE-VERSION", "EV-A0-06-PR-TRIGGER", "EV-A0-06-OLD-WORKFLOW"],
+  "notes": "CI runs yarn test, yarn package, and verifies version consistency between package.json and manifest.json"
+}

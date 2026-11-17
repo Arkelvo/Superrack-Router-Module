@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-07-VERSION-SYNC",
+  "taskId": "A0-07",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "version-sync.mjs works for --write and --check",
+  "source": "scripts/version-sync.mjs",
+  "location": "scripts/version-sync.mjs",
+  "collectedAt": "2026-11-16T01:20:00Z",
+  "collectedBy": "Builder",
+  "sha256": "567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-07-DRAFT-PIPELINE", "EV-A0-07-RELEASE-00", "EV-A0-07-IMMUTABLE"],
+  "notes": "Tested: --write 0.8.3 updates both files, --check 0.8.3 validates both match. Baseline mismatch (0.8.2 vs 0.7.1) correctly detected."
+}

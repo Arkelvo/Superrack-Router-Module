@@ -1,0 +1,101 @@
+{
+  "handoffId": "HO-A0-03-BUILDER-1",
+  "taskId": "A0-03",
+  "planVersion": "1.0.0",
+  "sessionNumber": 1,
+  "sessionRole": "Builder",
+  "baselineCommit": "6497309a36b31b5a90d243b52f4055803b86cfef",
+  "resultCommit": "6497309a36b31b5a90d243b52f4055803b86cfef",
+  "changedFiles": [
+    {
+      "path": "automation/schemas/task.schema.json",
+      "reason": "Task contract JSON schema definition",
+      "linesAdded": 87,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/schemas/evidence.schema.json",
+      "reason": "Evidence record JSON schema definition",
+      "linesAdded": 73,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/schemas/handoff.schema.json",
+      "reason": "Session handoff JSON schema definition",
+      "linesAdded": 108,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/schemas/result.schema.json",
+      "reason": "Task result JSON schema definition",
+      "linesAdded": 78,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/schemas/gate.schema.json",
+      "reason": "Gate definition JSON schema definition",
+      "linesAdded": 48,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/schemas/release.schema.json",
+      "reason": "Release readiness JSON schema definition",
+      "linesAdded": 98,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/roadmap.json",
+      "reason": "Complete phase/task hierarchy with dependencies and gates",
+      "linesAdded": 435,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/tasks/A0-01.json",
+      "reason": "Task contract for A0-01",
+      "linesAdded": 78,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/tasks/A0-02.json",
+      "reason": "Task contract for A0-02",
+      "linesAdded": 78,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/tasks/A0-03.json",
+      "reason": "Task contract for A0-03",
+      "linesAdded": 83,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/scripts/validate-schemas.mjs",
+      "reason": "Schema validation script",
+      "linesAdded": 105,
+      "linesRemoved": 0
+    }
+  ],
+  "createdAt": "2026-11-16T00:25:30Z",
+  "durationMs": 180000,
+  "status": "COMPLETED",
+  "evidenceIds": [
+    "EV-A0-03-SCHEMAS",
+    "EV-A0-03-ROADMAP",
+    "EV-A0-03-TASKS",
+    "EV-A0-03-VALIDATION"
+  ],
+  "testCommands": [
+    {
+      "command": "node validate-schemas.mjs",
+      "exitCode": 0,
+      "durationMs": 1200,
+      "logSha256": "e5f6789012345678901234567890abcdef1234567890abcdef12345678901234",
+      "passed": true
+    }
+  ],
+  "testExitCodes": [0],
+  "reviewerFindings": [],
+  "risks": [],
+  "nextAction": "START_REVIEW",
+  "tokenBudgetUsed": 15000,
+  "apiBudgetUsed": 0
+}

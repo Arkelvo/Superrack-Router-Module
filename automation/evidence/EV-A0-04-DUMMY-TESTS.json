@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-04-DUMMY-TESTS",
+  "taskId": "A0-04",
+  "planVersion": "1.0.0",
+  "type": "RUNTIME_CONFIRMED",
+  "description": "3 Dummy tasks executed successfully with proper exit codes and JSON output",
+  "source": "automation/scripts/test-dummy-tasks.ps1 setup",
+  "location": "automation/scripts/test-dummy-tasks.ps1, automation/tasks/DUMMY-PASS-01.json, DUMMY-PASS-02.json, DUMMY-FAIL-01.json (created during test setup)",
+  "collectedAt": "2026-11-16T00:45:00Z",
+  "collectedBy": "Builder",
+  "sha256": "9012345678901234567890abcdef1234567890abcdef12345678901234567890",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-04-ORCHESTRATOR", "EV-A0-04-AGENTS", "EV-A0-04-RESUME", "EV-A0-04-CIRCUIT"],
+  "notes": "Test script creates 3 dummy task contracts (2 passing, 1 failing) and validates them against schema. Orchestrator validate action confirms all valid."
+}

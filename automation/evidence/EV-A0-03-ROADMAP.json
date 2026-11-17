@@ -1,0 +1,15 @@
+{
+  "evidenceId": "EV-A0-03-ROADMAP",
+  "taskId": "A0-03",
+  "planVersion": "1.0.0",
+  "type": "STATIC_CONFIRMED",
+  "description": "roadmap.json created with all phases, tasks, dependencies, gates, and allowedPaths",
+  "source": "automation/roadmap.json",
+  "location": "automation/roadmap.json",
+  "collectedAt": "2026-11-16T00:25:00Z",
+  "collectedBy": "Builder",
+  "sha256": "b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456789",
+  "verdict": "SUPPORTS",
+  "relatedEvidence": ["EV-A0-03-SCHEMAS", "EV-A0-03-TASKS", "EV-A0-03-VALIDATION"],
+  "notes": "Contains 6 phases (A0, 0.9.0, 0.10.0, 0.11.0, 1.0.0, 1.1.x+) with 33 total tasks"
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Release Readiness",
+  "type": "object",
+  "required": ["releaseId", "targetVersion", "planVersion", "draftReleaseId", "draftTag", "targetBranch", "preparePrNumber", "prepareCommitSha", "finalCommitSha", "tagSha", "packageTgzSha256", "manifestVersion", "packageJsonVersion", "ciRunId", "readinessStatus", "createdAt", "updatedAt"],
+  "properties": {
+    "releaseId": {
+      "type": "string",
+      "pattern": "^REL-[0-9.]+$",
+      "description": "Release identifier (e.g., REL-0.9.0)"
+    },
+    "targetVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.]+)?$",
+      "description": "Target semantic version"
+    },
+    "planVersion": {
+      "type": "string",
+      "description": "Plan version this release follows"
+    },
+    "draftReleaseId": {
+      "type": "integer",
+      "description": "GitHub Release Draft database ID"
+    },
+    "draftTag": {
+      "type": "string",
+      "description": "Tag name in the draft release"
+    },
+    "targetBranch": {
+      "type": "string",
+      "description": "Target branch for release (usually main)"
+    },
+    "preparePrNumber": {
+      "type": "integer",
+      "description": "PR number from Prepare workflow"
+    },
+    "prepareCommitSha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "Commit SHA after Prepare PR merge"
+    },
+    "finalCommitSha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "Final verified commit SHA"
+    },
+    "tagSha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "SHA the release tag points to"
+    },
+    "packageTgzSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 of the .tgz package artifact"
+    },
+    "manifestVersion": {
+      "type": "string",
+      "description": "Version in companion/manifest.json"
+    },
+    "packageJsonVersion": {
+      "type": "string",
+      "description": "Version in package.json"
+    },
+    "ciRunId": {
+      "type": "string",
+      "description": "GitHub Actions run ID for final CI verification"
+    },
+    "readinessStatus": {
+      "type": "string",
+      "enum": ["DRAFT_CREATED", "PREPARE_STARTED", "PREPARE_COMPLETE", "PR_OPEN", "PR_MERGED", "FINALIZE_STARTED", "FINALIZE_COMPLETE", "READY_TO_PUBLISH", "PUBLISHED", "PUBLISHED_VERIFIED", "RELEASE_BLOCKED"],
+      "description": "Current release pipeline state"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Blocking issues preventing progression"
+    },
+    "auditLog": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "stage", "actor", "action", "result"],
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "stage": { "type": "string" },
+          "actor": { "type": "string", "enum": ["User", "PrepareWorkflow", "FinalizeWorkflow", "PublishWorkflow", "AuditWorkflow", "Orchestrator"] },
+          "action": { "type": "string" },
+          "result": { "type": "string" }
+        }
+      },
+      "description": "Immutable audit trail"
+    }
+  },
+  "additionalProperties": false
+}

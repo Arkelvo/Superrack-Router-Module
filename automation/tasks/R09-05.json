@@ -1,0 +1,40 @@
+{
+  "taskId": "R09-05",
+  "version": "1.0.0",
+  "phase": "0.9.0",
+  "title": "Automatische Regression",
+  "description": "Implement automatic regression testing for all ProLink functionality. Create comprehensive test suite that runs on every change to catch regressions. Evidence class: RUNTIME_CONFIRMED.",
+  "allowedPaths": [
+    "__tests__/"
+  ],
+  "dependencies": ["R09-04"],
+  "evidenceRequirements": [
+    {
+      "evidenceId": "EV-R09-05-REGRESSION",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "Comprehensive regression test suite",
+      "source": "__tests__/prolink-regression.test.js"
+    },
+    {
+      "evidenceId": "EV-R09-05-CI-INTEGRATION",
+      "type": "RUNTIME_CONFIRMED",
+      "description": "CI integration for regression tests",
+      "source": ".github/workflows/pr-checks.yml"
+    }
+  ],
+  "gates": ["G01", "G04", "G05", "G06"],
+  "acceptanceCriteria": [
+    "Regression test file created covering all ProLink codec, actions, state, and presets",
+    "Tests verify backward compatibility of existing functionality",
+    "Tests cover edge cases: disconnect/reconnect, focus changes, invalid inputs",
+    "Tests run in CI on every PR",
+    "All existing 254 tests continue to pass",
+    "New regression tests add meaningful coverage beyond unit tests"
+  ],
+  "createdAt": "2026-11-16T05:15:00Z",
+  "updatedAt": "2026-11-16T05:50:00Z",
+  "status": "DONE",
+  "assignedRole": "Builder",
+  "attempts": 1,
+  "fixRounds": 0
+}

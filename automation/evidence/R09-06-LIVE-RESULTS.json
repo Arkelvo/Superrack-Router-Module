@@ -1,0 +1,28 @@
+{
+  "taskId": "R09-06",
+  "testDate": "PENDING_LIVE_TEST",
+  "tester": "PENDING",
+  "environment": {
+    "os": "PENDING",
+    "companionVersion": "PENDING",
+    "moduleCommit": "PENDING",
+    "superRackProduct": "PENDING",
+    "superRackVersion": "PENDING",
+    "interfaceAddresses": [],
+    "discoveryName": "PENDING"
+  },
+  "steps": {
+    "1_legacy_regression": { "pass": false, "notes": "PENDING LIVE TEST", "captures": [] },
+    "2_discovery": { "pass": false, "notes": "PENDING LIVE TEST", "captures": [] },
+    "3_handshake": { "pass": false, "notes": "PENDING LIVE TEST", "captures": [] },
+    "4_rack_selection": { "pass": false, "notes": "PENDING LIVE TEST", "captures": [] },
+    "5_snapshot_gates": { "pass": false, "notes": "PENDING LIVE TEST", "captures": [] },
+    "6_disconnect_reconnect": { "pass": false, "notes": "PENDING LIVE TEST", "captures": [] },
+    "7_lifecycle_errors": { "pass": false, "notes": "PENDING LIVE TEST", "captures": [] },
+    "8_parser_robustness": { "pass": false, "notes": "PENDING LIVE TEST", "captures": [] }
+  },
+  "overallPass": false,
+  "blockingIssues": [],
+  "minorIssues": [],
+  "status": "NOT_PERFORMED - Requires physical SuperRack hardware"
+}

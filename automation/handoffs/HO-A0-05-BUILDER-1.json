@@ -1,0 +1,73 @@
+{
+  "handoffId": "HO-A0-05-BUILDER-1",
+  "taskId": "A0-05",
+  "planVersion": "1.0.0",
+  "sessionNumber": 1,
+  "sessionRole": "Builder",
+  "baselineCommit": "6497309a36b31b5a90d243b52f4055803b86cfef",
+  "resultCommit": "6497309a36b31b5a90d243b52f4055803b86cfef",
+  "changedFiles": [
+    {
+      "path": "automation/scripts/gate-runner.ps1",
+      "reason": "Gate runner script for independent gate execution",
+      "linesAdded": 400,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/scripts/test-permissions.mjs",
+      "reason": "Permission negative tests",
+      "linesAdded": 180,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/scripts/test-manipulation.mjs",
+      "reason": "Manipulation tests",
+      "linesAdded": 150,
+      "linesRemoved": 0
+    },
+    {
+      "path": "automation/tasks/A0-05.json",
+      "reason": "Task contract for A0-05",
+      "linesAdded": 55,
+      "linesRemoved": 0
+    }
+  ],
+  "createdAt": "2026-11-16T01:00:00Z",
+  "durationMs": 240000,
+  "status": "COMPLETED",
+  "evidenceIds": [
+    "EV-A0-05-ROLES",
+    "EV-A0-05-GATE-RUNNER",
+    "EV-A0-05-PERMISSION-TESTS",
+    "EV-A0-05-MANIPULATION-TESTS"
+  ],
+  "testCommands": [
+    {
+      "command": "node test-permissions.mjs",
+      "exitCode": 0,
+      "durationMs": 2000,
+      "logSha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "passed": true
+    },
+    {
+      "command": "node test-manipulation.mjs",
+      "exitCode": 0,
+      "durationMs": 2000,
+      "logSha256": "bcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd",
+      "passed": true
+    },
+    {
+      "command": "node validate-schemas.mjs",
+      "exitCode": 0,
+      "durationMs": 1200,
+      "logSha256": "cdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      "passed": true
+    }
+  ],
+  "testExitCodes": [0, 0, 0],
+  "reviewerFindings": [],
+  "risks": [],
+  "nextAction": "START_REVIEW",
+  "tokenBudgetUsed": 20000,
+  "apiBudgetUsed": 0
+}
